@@ -40,3 +40,16 @@
 - เทสต์ integration 5 ข้อ: ไฟล์จริง, นำเข้าซ้ำไม่เปลี่ยนอะไร (idempotent), รอบถัดไป (ราคาเปลี่ยน/หายไป/ใหม่เข้ากลุ่มเดิมทั้งที่ป้ายในไฟล์เปลี่ยน E001→E005), ไฟล์ผิดไม่บันทึกอะไร, ต้องล็อกอิน
 - **ข้อสังเกตตามจริง**: หน่วยนี้เขียนโค้ดเสร็จก่อนรันเทสต์ครั้งแรก จึงไม่ได้เห็นเทสต์ล้มก่อน (ผ่านตั้งแต่รอบแรก) — จะใช้ PIT ในหน่วย 6 ตรวจว่าเทสต์จับการเปลี่ยนโค้ดได้จริง
 - รวมเทสต์ทั้งหมด 36 ข้อผ่าน
+
+## 2026-11-12 — หน่วย 5: API ฝั่ง user และ admin
+- เขียนเทสต์ 16 ข้อก่อน รันแล้วล้ม 13 ข้อ (ไม่มี endpoint) 3 ข้อที่ผ่านคือข้อที่คาดหวัง 401/404 อยู่แล้ว
+- User: `GET /api/product-types`, `GET /api/product-types/{code}` (ร้านเรียงราคาถูกสุดก่อน), `GET /api/products` (กรอง typeCode/shopType/q, เรียง PRICE_ASC/PRICE_DESC/NAME, แบ่งหน้า ≤100), `GET /api/products/{itemId}` (+ประวัติราคา)
+- Admin: `GET /api/admin/products`, `GET /api/admin/product-types` (มี activeCount/visibleCount/onUserSite), `POST .../resolve`, `POST .../move`, `POST .../deactivate`
+- ฝั่งอ่านใช้ `ProductQueryRepository` (JdbcClient) map ตรงเป็น response record — เป็น read model ไม่ต้องโหลด entity มาคัดลอก; ฝั่งสั่งงานใช้ entity + JPA
+- กฎ "แสดงฝั่ง user" อยู่ที่ view `public_product` ที่เดียว; admin ถาม `onUserSite` จาก view เดียวกัน
+- กฎลิงก์หลัก (affiliate → product_url) อยู่ที่ `ProductQueryRepository.link` ที่เดียว
+- sort รับเป็น enum แล้ว map เป็น ORDER BY ด้วย switch — ค่าแปลกเช่น "DROP TABLE" ได้ 400 ไม่ถึง SQL; ค่าค้นหา escape % และ _
+- **บั๊กที่ constraint ใน DB จับได้**: เทสต์ลองปิด REVIEW ให้สินค้าที่ราคาย่อ "1.0พัน" (ไม่มีราคา) → DB ปฏิเสธ (`ck_price_or_review`) แทนที่จะแสดงสินค้าไม่มีราคาบนเว็บ แก้โดยย้ายกฎเข้า `MarketplaceProduct.resolveReview()`: ปิด REVIEW ได้เฉพาะเมื่อมีราคา ไม่เช่นนั้นตอบ 409 พร้อมเหตุผล ("รอนำเข้ารอบที่มีราคาเต็ม")
+- ฉากทดสอบกลุ่มชนกันตั้งผิดรอบแรก (กลุ่มในไฟล์มีสมาชิกเดิมกลุ่มเดียว) — แก้ให้มีสมาชิกเดิมจาก 2 กลุ่มจริง
+- ย้ายกลุ่มย้ายทุกเวอร์ชันของ item เพื่อให้ประวัติราคาตามไปด้วย; เลิกขาย = 'N' + DISCONTINUED (ไม่ใช่ประวัติราคา)
+- เทสต์ทั้งหมด 52 ข้อผ่าน

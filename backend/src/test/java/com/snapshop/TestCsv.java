@@ -30,6 +30,12 @@ public final class TestCsv {
 		return this;
 	}
 
+	/** One full CSV line, for cases the shortcuts above do not cover. */
+	public TestCsv line(String csvLine) {
+		body.append(csvLine).append('\n');
+		return this;
+	}
+
 	public MockMultipartFile file() {
 		return new MockMultipartFile("file", "test.csv", "text/csv", body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	}

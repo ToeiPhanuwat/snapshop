@@ -1,5 +1,6 @@
 package com.snapshop.model.entity;
 
+import com.snapshop.exception.BusinessRuleException;
 import com.snapshop.model.enums.ActiveFlag;
 import com.snapshop.model.enums.DeactivationReason;
 import com.snapshop.model.enums.ProductStatus;
@@ -151,7 +152,14 @@ public class MarketplaceProduct {
 		this.deactivatedAt = now;
 	}
 
+	/** Admin checked the item. An item without a known price cannot be shown, so it stays in REVIEW. */
 	public void resolveReview() {
+		if (status != ProductStatus.REVIEW) {
+			throw new BusinessRuleException("สินค้า " + itemId + " ไม่ได้อยู่ในสถานะ REVIEW");
+		}
+		if (price == null) {
+			throw new BusinessRuleException("สินค้า " + itemId + " ยังไม่มีราคา รอนำเข้ารอบที่มีราคาเต็ม");
+		}
 		this.status = ProductStatus.OK;
 	}
 
