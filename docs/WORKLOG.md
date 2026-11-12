@@ -30,3 +30,13 @@
 - กฎที่ทดสอบ: กลุ่มใหม่ 1 กลุ่มต่อชื่อ, item เดิมไม่ย้ายกลุ่มแม้ไฟล์แยก, item ใหม่ตามเพื่อนร่วมกลุ่ม, จับคู่ชื่อ normalize, item ที่เคยเก็บแต่ไม่ active ยังได้กลุ่มเดิม, ชนกัน → ไม่รวม + REVIEW เฉพาะ item ใหม่, ราคาเท่า/เปลี่ยน/ไม่รู้, REVIEW ค้างจน admin แก้, NOT_IN_LATEST และกลับมา, TEST/OUT_OF_STOCK
 - ตัดสินใจเพิ่ม: กลุ่มที่ชนกันเลือกกลุ่มที่สมาชิกมากที่สุด เสมอกันเลือก id เล็กสุด — ผลไม่ขึ้นกับลำดับใน Map; สินค้าทดสอบ = ชื่อร้านมีคำว่า "test"
 - REVIEW ค้างไว้จน admin กด "ตรวจแล้ว" (จะเพิ่ม endpoint resolve ในหน่วย 5) เพราะระบบไม่รู้ว่าเหตุผลที่ต้องตรวจหมดไปแล้วหรือยัง
+
+## 2026-11-12 — หน่วย 4: ImportService + POST /api/admin/imports
+- คำนวณตัวเลขที่คาดจากไฟล์จริงด้วย Python แยกจากโค้ด Java (ไม่ใช้โค้ดที่กำลังทดสอบเป็นตัวเฉลย): 122 กลุ่ม, OK 187 / REVIEW 3 / TEST 1 / OUT_OF_STOCK 1
+- Entity 3 ตัว (`ProductType`, `MarketplaceProduct`, `ImportBatch`), Repository (Spring Data JPA + `ImportLockRepository` advisory lock), `ImportService`, `AdminImportController`, `SecurityConfig` (HTTP Basic เฉพาะ /api/admin/**), `GlobalExceptionHandler` (ProblemDetail + รายการ errors)
+- ข้อมูลของรายการใน `MarketplaceProduct` เป็น `updatable = false` — แถวเดิมแก้ได้แค่สถานะ/last_seen/กลุ่ม ตามกฎ "สินค้าเดิมไม่ต้องทำอะไร"
+- ลำดับเขียน: ปิดแถวเดิม (N) แล้ว flush ก่อน insert แถวใหม่ เพราะ Hibernate เรียง insert ก่อน update ซึ่งจะชน partial unique index
+- ใช้ advisory lock แทน ON CONFLICT ตามแผนเดิม — นำเข้าทีละรอบเท่านั้น (ผู้เขียนคนเดียว) จึงไม่มี race ให้กัน; unique constraint ยังเป็นด่านสุดท้าย
+- เทสต์ integration 5 ข้อ: ไฟล์จริง, นำเข้าซ้ำไม่เปลี่ยนอะไร (idempotent), รอบถัดไป (ราคาเปลี่ยน/หายไป/ใหม่เข้ากลุ่มเดิมทั้งที่ป้ายในไฟล์เปลี่ยน E001→E005), ไฟล์ผิดไม่บันทึกอะไร, ต้องล็อกอิน
+- **ข้อสังเกตตามจริง**: หน่วยนี้เขียนโค้ดเสร็จก่อนรันเทสต์ครั้งแรก จึงไม่ได้เห็นเทสต์ล้มก่อน (ผ่านตั้งแต่รอบแรก) — จะใช้ PIT ในหน่วย 6 ตรวจว่าเทสต์จับการเปลี่ยนโค้ดได้จริง
+- รวมเทสต์ทั้งหมด 36 ข้อผ่าน
