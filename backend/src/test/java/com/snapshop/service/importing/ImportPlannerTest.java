@@ -29,6 +29,8 @@ class ImportPlannerTest {
 
 		assertThat(plan.newTypes()).containsExactly(
 				new NewType("dr pong serum", "Dr.PONG Serum", GroupingMethod.ENGLISH_NAME_MATCH));
+		assertThat(plan.newItemCount()).isEqualTo(2);
+		assertThat(plan.priceChangeCount()).isZero();
 		assertThat(plan.newVersions()).extracting(NewVersion::type)
 				.containsExactly(new Created("dr pong serum"), new Created("dr pong serum"));
 	}
@@ -112,6 +114,8 @@ class ImportPlannerTest {
 		ImportPlan plan = plan(row(1, "E001", "S", 90));
 
 		NewVersion v = single(plan.newVersions());
+		assertThat(plan.priceChangeCount()).isEqualTo(1);
+		assertThat(plan.newItemCount()).isZero();
 		assertThat(v.replacesProductId()).isEqualTo(1001L);
 		assertThat(v.type()).isEqualTo(new Existing(10));
 		assertThat(v.row().price()).isEqualByComparingTo("90");

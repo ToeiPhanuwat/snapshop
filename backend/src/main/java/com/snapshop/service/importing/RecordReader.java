@@ -32,53 +32,66 @@ final class RecordReader {
 
 	Optional<ImportRow> read() {
 		int errorsBefore = errors.size();
-		Long itemId = itemId();
-		Long shopId = itemId == null ? null : shopId(itemId);
-		String shopName = required(Columns.SHOP_NAME, "ชื่อร้านค้าว่าง");
-		String name = required(Columns.NAME, "ชื่อสินค้าว่าง");
-		ShopType shopType = label(Columns.SHOP_TYPE, "ประเภทร้านค้าไม่รู้จัก", ShopType::fromLabel);
-		String groupLabel = required(Columns.GROUP_LABEL, "รหัสกลุ่มว่าง");
-		String groupName = required(Columns.GROUP_NAME, "ชื่อกลุ่มว่าง");
-		GroupingMethod method = label(Columns.GROUPING_METHOD, "วิธีจัดกลุ่มไม่รู้จัก", GroupingMethod::fromLabel);
+		Optional<Long> itemId = itemId();
+		Optional<Long> shopId = itemId.flatMap(this::shopId);
+		Optional<String> shopName = required(Columns.SHOP_NAME, "ชื่อร้านค้าว่าง");
+		Optional<String> name = required(Columns.NAME, "ชื่อสินค้าว่าง");
+		Optional<ShopType> shopType = label(Columns.SHOP_TYPE, "ประเภทร้านค้าไม่รู้จัก", ShopType::fromLabel);
+		Optional<String> groupLabel = required(Columns.GROUP_LABEL, "รหัสกลุ่มว่าง");
+		Optional<String> groupName = required(Columns.GROUP_NAME, "ชื่อกลุ่มว่าง");
+		Optional<GroupingMethod> method = label(Columns.GROUPING_METHOD, "วิธีจัดกลุ่มไม่รู้จัก",
+				GroupingMethod::fromLabel);
 		if (errors.size() > errorsBefore) {
 			return Optional.empty();
 		}
-		return Optional.of(new ImportRow(line, itemId, shopId, shopName, shopType, ProductName.of(name),
-				amount(Columns.PRICE), optional(Columns.SOLD), amount(Columns.COMMISSION_RATE),
-				amount(Columns.COMMISSION), get(Columns.PRODUCT_URL).strip(), optional(Columns.AFFILIATE_URL),
-				optional(Columns.IMAGE_URL), groupLabel, groupName, method));
+		return Optional.of(new ImportRow(line, itemId.orElseThrow(), shopId.orElseThrow(), shopName.orElseThrow(),
+				shopType.orElseThrow(), ProductName.of(name.orElseThrow()), amount(Columns.PRICE),
+				optional(Columns.SOLD), amount(Columns.COMMISSION_RATE), amount(Columns.COMMISSION),
+				get(Columns.PRODUCT_URL).strip(), optional(Columns.AFFILIATE_URL), optional(Columns.IMAGE_URL),
+				groupLabel.orElseThrow(), groupName.orElseThrow(), method.orElseThrow()));
 	}
 
-	private Long itemId() {
+	private Optional<Long> itemId() {
 		String text = get(Columns.ITEM_ID).strip();
 		if (!DIGITS.matcher(text).matches()) {
-			return error("รหัสสินค้าไม่ใช่ตัวเลข '" + text + "'");
+			error("รหัสสินค้าไม่ใช่ตัวเลข '" + text + "'");
+			return Optional.empty();
 		}
 		long itemId = Long.parseLong(text);
 		Integer firstLine = lineByItem.putIfAbsent(itemId, line);
 		if (firstLine != null) {
-			return error("รหัสสินค้าซ้ำกับแถว " + firstLine);
+			error("รหัสสินค้าซ้ำกับแถว " + firstLine);
+			return Optional.empty();
 		}
-		return itemId;
+		return Optional.of(itemId);
 	}
 
-	private Long shopId(long itemId) {
+	private Optional<Long> shopId(long itemId) {
 		String url = get(Columns.PRODUCT_URL).strip();
 		Matcher m = PRODUCT_URL.matcher(url);
 		if (!m.matches() || Long.parseLong(m.group(2)) != itemId) {
-			return error("ลิงก์สินค้าไม่ตรงกับรหัสสินค้า '" + url + "'");
+			error("ลิงก์สินค้าไม่ตรงกับรหัสสินค้า '" + url + "'");
+			return Optional.empty();
 		}
-		return Long.parseLong(m.group(1));
+		return Optional.of(Long.parseLong(m.group(1)));
 	}
 
-	private <E> E label(String column, String message, Function<String, Optional<E>> lookup) {
+	private <E> Optional<E> label(String column, String message, Function<String, Optional<E>> lookup) {
 		String text = get(column);
-		return lookup.apply(text).orElseGet(() -> error(message + " '" + text + "'"));
+		Optional<E> found = lookup.apply(text);
+		if (found.isEmpty()) {
+			error(message + " '" + text + "'");
+		}
+		return found;
 	}
 
-	private String required(String column, String message) {
+	private Optional<String> required(String column, String message) {
 		String text = get(column);
-		return text.isBlank() ? error(message) : text;
+		if (text.isBlank()) {
+			error(message);
+			return Optional.empty();
+		}
+		return Optional.of(text);
 	}
 
 	private String optional(String column) {
@@ -96,9 +109,8 @@ final class RecordReader {
 		return record.isSet(column) ? record.get(column) : "";
 	}
 
-	private <T> T error(String message) {
+	private void error(String message) {
 		errors.add("แถว " + line + ": " + message);
-		return null;
 	}
 
 }

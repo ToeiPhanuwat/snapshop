@@ -53,3 +53,13 @@
 - ฉากทดสอบกลุ่มชนกันตั้งผิดรอบแรก (กลุ่มในไฟล์มีสมาชิกเดิมกลุ่มเดียว) — แก้ให้มีสมาชิกเดิมจาก 2 กลุ่มจริง
 - ย้ายกลุ่มย้ายทุกเวอร์ชันของ item เพื่อให้ประวัติราคาตามไปด้วย; เลิกขาย = 'N' + DISCONTINUED (ไม่ใช่ประวัติราคา)
 - เทสต์ทั้งหมด 52 ข้อผ่าน
+
+## 2026-11-12 — หน่วย 6: เครื่องมือคุณภาพ
+- SKILL.md อ้างถึง crapper / dryer / mutator โดยไม่ระบุเครื่องมือ ผมเลือกที่ใช้กับ Maven ได้:
+  - Crapper → JaCoCo (ผูกกับ `verify`) + `backend/tools/crap.py` คำนวณ CRAP ต่อ method จาก jacoco.xml
+  - Dryer → PMD CPD `cpd-check` (ผูกกับ `verify`, minimumTokens 60) — build ล้มถ้ามีโค้ดซ้ำ
+  - Mutator → PIT บนกฎบริสุทธิ์ (`service.importing`, `model.enums`) เกณฑ์ 90% สั่งแยก: `./mvnw test-compile org.pitest:pitest-maven:mutationCoverage`
+- ผลรอบแรก: CRAP สูงสุด 7.0 (`addFileGroup`) ไม่มี method ไหนถึง 10; CPD ไม่พบโค้ดซ้ำ; PIT ฆ่าได้ 88/95 (93%)
+- Survivors 2 ตัวเป็น equivalent mutant: เส้นทาง error ใน `RecordReader` คืน null อยู่แล้ว เปลี่ยนเป็น null/0 ก็ไม่มีผลเพราะแถวถูกทิ้ง — แก้ที่ต้นเหตุ: helper คืน `Optional` และ `error()` ไม่คืนค่า ทำให้ไม่มีค่าหลอกให้ใช้ผิด
+- ไม่มีเทสต์ unit ครอบ 5 จุด (`ImportPlan.priceChangeCount/newItemCount` มีแค่ integration test ครอบ) — เพิ่มการตรวจในเทสต์ planner
+- ผลรอบสอง: PIT ฆ่าได้ 96/96 (100%), `verify` ผ่าน, CRAP สูงสุด 7.0
