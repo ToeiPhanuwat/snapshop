@@ -63,3 +63,14 @@
 - Survivors 2 ตัวเป็น equivalent mutant: เส้นทาง error ใน `RecordReader` คืน null อยู่แล้ว เปลี่ยนเป็น null/0 ก็ไม่มีผลเพราะแถวถูกทิ้ง — แก้ที่ต้นเหตุ: helper คืน `Optional` และ `error()` ไม่คืนค่า ทำให้ไม่มีค่าหลอกให้ใช้ผิด
 - ไม่มีเทสต์ unit ครอบ 5 จุด (`ImportPlan.priceChangeCount/newItemCount` มีแค่ integration test ครอบ) — เพิ่มการตรวจในเทสต์ planner
 - ผลรอบสอง: PIT ฆ่าได้ 96/96 (100%), `verify` ผ่าน, CRAP สูงสุด 7.0
+
+## 2026-11-12 — หน่วย 7: Frontend ฝั่ง user
+- สร้างด้วย `create-next-app@16.4.6` (Tailwind 4.3.3, React 19.3) — `AGENTS.md` ของ Next บอกว่ามี breaking changes จึงอ่าน `node_modules/next/dist/docs` ก่อนเขียน: `cacheComponents` เปิดอยู่ (ข้อมูลที่ไม่ cache ต้องอยู่ใน `<Suspense>`), `params`/`searchParams` เป็น Promise, `middleware.ts` เปลี่ยนเป็น `proxy.ts`, proxy เป็นแค่ด่านแรก Server Action ต้องตรวจสิทธิ์ซ้ำ
+- โครงสร้าง: `app/(public)` หน้า user, `components/{ui,product,admin}`, `lib/api/{http,public,admin}.ts` (มี `server-only` — เรียก backend จากฝั่ง server เท่านั้น), `lib/auth.ts` (กฎล็อกอิน admin ที่เดียว), `lib/format.ts`, `types/api.ts` (ตรงกับ DTO), `proxy.ts`
+- ไม่ cache ราคา (`cache: "no-store"`) — ราคาต้องเป็นปัจจุบันเสมอ
+- ชื่อแสดงใช้ `displayName` จาก API (กฎ prefix + core อยู่ที่ backend ที่เดียว); ไม่แสดงรูป; ลิงก์ `rel="sponsored"`
+- ใช้ฟอนต์ระบบที่มีภาษาไทย แทน Geist ที่ไม่มีภาษาไทยและต้องโหลดจาก Google ตอน build
+- ตรวจกับระบบจริง: PostgreSQL 17 (docker compose) + backend jar + นำเข้าไฟล์จริงผ่าน API → 192 แถว, 122 กลุ่ม, หน้า user 38 กลุ่ม; admin ไม่ล็อกอินได้ 401; เปิดหน้าแรกและหน้ากลุ่ม PT000023 ใน browser: 9 ร้าน เรียงราคา, ป้ายร้าน, ปุ่มชี้ affiliate link
+- ปัญหาเครื่อง: Tomcat เปิด loopback ไม่ได้ ("Unable to establish loopback connection") เพราะ JDK สร้าง Unix domain socket ในโฟลเดอร์ temp ของ sandbox ไม่ได้ — รันด้วย `-Djdk.net.unixdomain.tmpdir=<โฟลเดอร์ที่เขียนได้>`
+- ข้อมูลจริงที่เห็น: "Dr.PONG 28D smart whitening drone acne activein serum Gen2" ขึ้นเป็น 2 กลุ่ม (ชื่อกลุ่มในไฟล์ต่างกันเล็กน้อย) — admin ใช้ปุ่มย้ายกลุ่มรวมได้
+- `npm run lint`, `npm run build` ผ่าน

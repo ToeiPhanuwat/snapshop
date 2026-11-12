@@ -16,3 +16,6 @@ frontend/next-env.d.ts
 # IDE
 .idea/
 .vscode/
+
+# local tool config
+.claude/
