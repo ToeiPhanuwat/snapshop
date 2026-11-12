@@ -74,3 +74,13 @@
 - ปัญหาเครื่อง: Tomcat เปิด loopback ไม่ได้ ("Unable to establish loopback connection") เพราะ JDK สร้าง Unix domain socket ในโฟลเดอร์ temp ของ sandbox ไม่ได้ — รันด้วย `-Djdk.net.unixdomain.tmpdir=<โฟลเดอร์ที่เขียนได้>`
 - ข้อมูลจริงที่เห็น: "Dr.PONG 28D smart whitening drone acne activein serum Gen2" ขึ้นเป็น 2 กลุ่ม (ชื่อกลุ่มในไฟล์ต่างกันเล็กน้อย) — admin ใช้ปุ่มย้ายกลุ่มรวมได้
 - `npm run lint`, `npm run build` ผ่าน
+
+## 2026-11-12 — หน่วย 8: หน้า admin, Docker, README
+- หน้า admin: `/admin` (REVIEW, NOT_IN_LATEST, นำเข้าล่าสุด), `/admin/import` (อัปโหลด + ผลนับ + รายการ error ตามแถว), `/admin/products` (กรองสถานะ/กลุ่ม/คำค้น, ปุ่ม ตรวจแล้ว / ย้ายกลุ่ม / เลิกขาย พร้อมยืนยัน), `/admin/types` (activeCount, visibleCount, แสดงฝั่ง user หรือไม่)
+- Server Actions (`app/admin/actions.ts`) เรียก `lib/api/admin.ts` ซึ่งตรวจล็อกอินซ้ำทุกครั้ง (`requireAdmin`) แล้วค่อยใส่ Basic auth ไป backend; หลังสั่งงานเรียก `refresh()`
+- ตรวจด้วย curl: ทุกหน้า `/admin*` ไม่ล็อกอิน/รหัสผิด = 401, ถูก = 200; หน้า `/admin` แสดง REVIEW 3 รายการ (ราคาย่อ) และประวัตินำเข้า
+- **ยังไม่ได้ทดสอบ**: กดปุ่ม admin (Server Actions) ใน browser — ผมไม่ได้ใช้รหัสผ่าน admin ใน browser (ระบบไม่ให้ดึงรหัสผ่านออกมา) logic ฝั่ง backend ของทุกปุ่มมี integration test ครอบแล้ว
+- หน้าแบบ stream (Suspense) ที่เรียก `notFound()` ได้ status 200 + `<meta name="robots" content="noindex">` แทน 404 — เป็นพฤติกรรมของ Next 16 เมื่อเปิด cacheComponents; ผู้ใช้เห็นหน้า "ไม่พบหน้านี้" ถูกต้อง
+- เพิ่ม Dockerfile (backend: temurin 25 multi-stage, รันด้วย user ไม่ใช่ root; frontend: node 24 + `output: "standalone"`) และ service `backend`/`frontend` ใน compose ภายใต้ profile `app` (`docker compose up -d db` ยังเปิดแค่ DB ได้)
+- ตรวจ: `docker compose --profile app build` ผ่าน, `up` แล้ว backend/frontend/db running, API 38 กลุ่ม, หน้าเว็บ 38 กลุ่ม, admin 401/200; หน้ามือถือ 375px ไม่มี scroll แนวนอน
+- README: โครงสร้าง, วิธีรัน, รูปแบบไฟล์นำเข้า, สรุปกฎ, คำสั่งตรวจคุณภาพ
