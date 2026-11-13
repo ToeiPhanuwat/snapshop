@@ -22,3 +22,7 @@ spring:
 
 server:
   port: ${PORT:8080}
+
+snapshop:
+  import:
+    inbox-dir: ${IMPORT_INBOX_DIR:./inbox}

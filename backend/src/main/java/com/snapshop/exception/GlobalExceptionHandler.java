@@ -15,6 +15,11 @@ public class GlobalExceptionHandler {
 		return problem;
 	}
 
+	@ExceptionHandler(InvalidRequestException.class)
+	ProblemDetail invalidRequest(InvalidRequestException e) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+	}
+
 	@ExceptionHandler(NotFoundException.class)
 	ProblemDetail notFound(NotFoundException e) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());

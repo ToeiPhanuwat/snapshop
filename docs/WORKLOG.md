@@ -84,3 +84,16 @@
 - เพิ่ม Dockerfile (backend: temurin 25 multi-stage, รันด้วย user ไม่ใช่ root; frontend: node 24 + `output: "standalone"`) และ service `backend`/`frontend` ใน compose ภายใต้ profile `app` (`docker compose up -d db` ยังเปิดแค่ DB ได้)
 - ตรวจ: `docker compose --profile app build` ผ่าน, `up` แล้ว backend/frontend/db running, API 38 กลุ่ม, หน้าเว็บ 38 กลุ่ม, admin 401/200; หน้ามือถือ 375px ไม่มี scroll แนวนอน
 - README: โครงสร้าง, วิธีรัน, รูปแบบไฟล์นำเข้า, สรุปกฎ, คำสั่งตรวจคุณภาพ
+
+## 2026-11-13 — CLAUDE.md
+- สร้าง `CLAUDE.md` ที่ root ใส่ `@SKILL.md` ให้โหลดทุก session; บอกว่าข้อ push ใน SKILL.md ให้ใช้ CLAUDE.md ส่วนตัวแทน; บันทึกข้อตกลง (Claude ไม่ใช้รหัสผ่าน admin, ไฟล์วางใน `inbox/`) และคำสั่งที่ใช้บ่อย — commit `SKILL.md` ด้วยตามที่ผู้ใช้เลือก
+- เหตุ: ผู้ใช้ถามว่าผมนำเข้าข้อมูลให้ได้ด้วยหรือ — ในรอบแรกผมใช้รหัสผ่าน admin จาก `.env` นำเข้าไฟล์ตัวอย่างระหว่างตรวจ ซึ่งขัดกับบรีฟ ("Claude ไม่กรอกรหัสผ่านหรือคีย์ของระบบ") จึงออกแบบทาง inbox ให้ไม่ต้องใช้รหัสผ่าน
+
+## 2026-11-13 — หน่วย 9: พรีวิว + inbox (backend)
+- เขียนเทสต์ 8 ข้อก่อน (`AdminInboxControllerTest`, inbox เป็น `@TempDir`) รันแล้วล้ม 7 (ข้อ 401 ผ่านอยู่แล้ว)
+- `ImportService`: แยก `prepare` (โหลดสถานะ + วางแผน) ใช้ทั้งนำเข้าจริงและ `preview` (readOnly) — พรีวิวใช้โค้ดเดียวกับนำเข้า ตัวเลขจึงตรงกันเสมอ (เทสต์ยืนยันด้วยไฟล์จริง)
+- `ImportPreviews` สร้างรายการให้ admin อ่าน: กลุ่มใหม่, ราคาเปลี่ยน (เดิม → ใหม่), จะซ่อน, จะเป็น REVIEW
+- `InboxService` + `AdminInboxController`: list / preview / import / discard; ย้ายไฟล์ไป `imported/` หรือ `rejected/` (มีเวลานำหน้า) หลัง transaction commit แล้ว ไฟล์ที่นำเข้าไม่ผ่านยังอยู่ใน inbox
+- ชื่อไฟล์ตรวจที่ขอบครั้งเดียว: regex ห้าม `/ \ : * ? " < > |`, ห้าม `..`, ต้องลงท้าย `.csv` → 400; ไม่มีไฟล์ → 404; `%2F` ถูก firewall ของ Spring Security ปฏิเสธ 400
+- รอบแรก `existing()` ครอบ 87% เพราะเช็ก parent หลัง normalize ไม่มีทางเกิด (regex ห้าม separator อยู่แล้ว) — ลบออกตาม "Delete dead code"
+- ผล: เทสต์ 60 ข้อผ่าน, CPD ผ่าน, CRAP สูงสุด 7.0, PIT 96/96

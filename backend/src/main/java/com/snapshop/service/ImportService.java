@@ -1,5 +1,6 @@
 package com.snapshop.service;
 
+import com.snapshop.dto.response.ImportPreviewResponse;
 import com.snapshop.dto.response.ImportResultResponse;
 import com.snapshop.model.entity.ImportBatch;
 import com.snapshop.model.entity.MarketplaceProduct;
@@ -55,12 +56,27 @@ public class ImportService {
 	public ImportResultResponse importFile(String category, String fileName, InputStream file) {
 		List<ImportRow> rows = parser.parse(file);
 		lock.lockForThisTransaction();
+		Prepared prepared = prepare(category, rows);
+		Instant now = Instant.now();
+		ImportBatch batch = batches.save(new ImportBatch(category, fileName, prepared.counts(), now));
+		new PlanApplier(category, batch.getId(), now, prepared.activeById()).apply(prepared.plan());
+		return ImportResultResponse.from(batch);
+	}
+
+	/** What {@link #importFile} would change, computed by the same code, without writing anything. */
+	@Transactional(readOnly = true)
+	public ImportPreviewResponse preview(String category, String fileName, InputStream file) {
+		Prepared prepared = prepare(category, parser.parse(file));
+		return ImportPreviews.of(fileName, prepared.counts(), prepared.plan(), prepared.activeById());
+	}
+
+	private Prepared prepare(String category, List<ImportRow> rows) {
 		List<MarketplaceProduct> active = products.findInCategory(category, ActiveFlag.Y);
 		ImportPlan plan = planner.plan(rows, loadState(category, active));
-		Instant now = Instant.now();
-		ImportBatch batch = batches.save(new ImportBatch(category, fileName, counts(rows, plan), now));
-		new PlanApplier(category, batch.getId(), now, byId(active)).apply(plan);
-		return ImportResultResponse.from(batch);
+		return new Prepared(counts(rows, plan), plan, byId(active));
+	}
+
+	private record Prepared(ImportBatch.Counts counts, ImportPlan plan, Map<Long, MarketplaceProduct> activeById) {
 	}
 
 	private CurrentState loadState(String category, List<MarketplaceProduct> active) {
