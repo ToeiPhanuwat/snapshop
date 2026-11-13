@@ -2,7 +2,8 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/admin", label: "ภาพรวม" },
-  { href: "/admin/import", label: "นำเข้า" },
+  { href: "/admin/inbox", label: "ไฟล์รอนำเข้า" },
+  { href: "/admin/import", label: "อัปโหลด" },
   { href: "/admin/products", label: "สินค้า" },
   { href: "/admin/types", label: "กลุ่ม" },
 ] as const;

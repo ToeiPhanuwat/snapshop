@@ -81,3 +81,29 @@ export interface Problem {
   detail?: string;
   errors?: string[];
 }
+
+export interface InboxFile {
+  name: string;
+  size: number;
+  modifiedAt: string;
+}
+
+export interface ItemLine {
+  itemId: number;
+  name: string;
+}
+
+/** What importing a file would change; nothing is written yet. */
+export interface ImportPreview {
+  fileName: string;
+  rowCount: number;
+  insertedCount: number;
+  priceChangedCount: number;
+  unchangedCount: number;
+  notInLatestCount: number;
+  newTypeCount: number;
+  newTypes: string[];
+  priceChanges: (ItemLine & { oldPrice: number | null; newPrice: number })[];
+  toHide: ItemLine[];
+  toReview: ItemLine[];
+}

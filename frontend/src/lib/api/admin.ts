@@ -2,7 +2,15 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { basicAuthHeader, isAdminAuthorization } from "@/lib/auth";
-import type { AdminProduct, AdminProductType, ImportResult, Page, ProductStatus } from "@/types/api";
+import type {
+  AdminProduct,
+  AdminProductType,
+  ImportPreview,
+  ImportResult,
+  InboxFile,
+  Page,
+  ProductStatus,
+} from "@/types/api";
 import { query, request, type Result } from "./http";
 
 /** Every admin call checks the caller again: proxy.ts is only the first gate. */
@@ -62,4 +70,23 @@ export function moveProduct(itemId: number, productTypeCode: string): Promise<Re
 
 export function markDiscontinued(itemId: number): Promise<Result<void>> {
   return adminRequest(`/api/admin/products/${itemId}/deactivate`, { method: "POST" });
+}
+
+const inboxPath = (name: string) => `/api/admin/inbox/${encodeURIComponent(name)}`;
+
+export function getInbox(): Promise<InboxFile[]> {
+  return adminGet("/api/admin/inbox");
+}
+
+/** 400 carries the file's row errors, 404 means the file is gone; both are shown to the admin, not thrown. */
+export function previewInbox(name: string): Promise<Result<ImportPreview>> {
+  return adminRequest(`${inboxPath(name)}/preview`);
+}
+
+export function importInbox(name: string): Promise<Result<ImportResult>> {
+  return adminRequest(`${inboxPath(name)}/import`, { method: "POST" });
+}
+
+export function discardInbox(name: string): Promise<Result<void>> {
+  return adminRequest(`${inboxPath(name)}/discard`, { method: "POST" });
 }

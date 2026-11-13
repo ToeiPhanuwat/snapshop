@@ -2,13 +2,16 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AdminProductTable } from "@/components/admin/AdminProductTable";
 import { ImportHistory } from "@/components/admin/ImportHistory";
-import { getAdminProducts, getRecentImports } from "@/lib/api/admin";
+import { getAdminProducts, getInbox, getRecentImports } from "@/lib/api/admin";
 
 const loading = <p className="text-sm text-zinc-500">กำลังโหลด…</p>;
 
 export default function AdminHome() {
   return (
     <>
+      <Suspense fallback={null}>
+        <InboxCount />
+      </Suspense>
       <section className="space-y-3">
         <h1 className="text-lg font-semibold">รอตรวจ (REVIEW)</h1>
         <p className="text-sm text-zinc-500">
@@ -42,6 +45,18 @@ export default function AdminHome() {
 async function Products({ status }: { status: "REVIEW" | "NOT_IN_LATEST" }) {
   const page = await getAdminProducts({ status });
   return <AdminProductTable products={page.items} />;
+}
+
+async function InboxCount() {
+  const count = (await getInbox()).length;
+  if (count === 0) {
+    return null;
+  }
+  return (
+    <Link href="/admin/inbox" className="block rounded-xl bg-orange-50 p-4 text-sm text-orange-800 ring-1 ring-orange-200">
+      มีไฟล์รอนำเข้า {count} ไฟล์ — ดูพรีวิวและนำเข้า →
+    </Link>
+  );
 }
 
 async function RecentImports() {

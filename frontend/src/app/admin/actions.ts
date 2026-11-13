@@ -1,7 +1,15 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { importFile, markDiscontinued, moveProduct, resolveReview } from "@/lib/api/admin";
+import { redirect } from "next/navigation";
+import {
+  discardInbox,
+  importFile,
+  importInbox,
+  markDiscontinued,
+  moveProduct,
+  resolveReview,
+} from "@/lib/api/admin";
 import type { Result } from "@/lib/api/http";
 import type { ImportResult } from "@/types/api";
 
@@ -67,4 +75,36 @@ export async function deactivateAction(_: ActionState, formData: FormData): Prom
   }
   refresh();
   return { ok: true, message: "บันทึกว่าเลิกขายแล้ว" };
+}
+
+function fileNameOf(formData: FormData): string {
+  const name = String(formData.get("name") ?? "");
+  if (!name) {
+    throw new Error("ไม่มีชื่อไฟล์");
+  }
+  return name;
+}
+
+/** Imports a file from the inbox, then goes back to the inbox list with the result. */
+export async function importInboxAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  const name = fileNameOf(formData);
+  const result = await importInbox(name);
+  if (!result.ok) {
+    return failure(result);
+  }
+  const r = result.data;
+  redirect(
+    `/admin/inbox?done=${encodeURIComponent(
+      `นำเข้า ${name} แล้ว: ใหม่ ${r.insertedCount}, ราคาเปลี่ยน ${r.priceChangedCount}, ซ่อน ${r.notInLatestCount}, กลุ่มใหม่ ${r.newTypeCount}`,
+    )}`,
+  );
+}
+
+export async function discardInboxAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  const name = fileNameOf(formData);
+  const result = await discardInbox(name);
+  if (!result.ok) {
+    return failure(result);
+  }
+  redirect(`/admin/inbox?done=${encodeURIComponent(`ทิ้งไฟล์ ${name} แล้ว (ย้ายไป rejected/)`)}`);
 }
