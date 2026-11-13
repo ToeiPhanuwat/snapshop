@@ -44,12 +44,21 @@ frontend/   Next.js 16 · Tailwind 4.3 · App Router
    ```bash
    cd frontend && npm install && npm run dev
    ```
-5. เปิด http://localhost:3000/admin/import แล้วอัปโหลดไฟล์ CSV
+5. วางไฟล์ CSV ใน `inbox/` แล้วเปิด http://localhost:3000/admin/inbox (หรืออัปโหลดที่ `/admin/import`)
 
 หรือรันทั้งหมดใน Docker:
 ```bash
 docker compose --profile app up -d --build
 ```
+
+## นำเข้าผ่าน inbox (ไม่ต้องใช้รหัสผ่าน admin)
+
+1. คนหรือ AI เตรียมไฟล์ CSV (merge + แยกชนิดสินค้า) แล้ววางในโฟลเดอร์ `inbox/` ที่ root ของโปรเจกต์
+2. admin เปิด `/admin/inbox` → "ดูพรีวิว" เห็นว่าจะเพิ่ม/ราคาเปลี่ยน/ซ่อน/รอตรวจ/กลุ่มใหม่อะไรบ้าง (ยังไม่บันทึก)
+3. กด "นำเข้าไฟล์นี้" (ไฟล์ย้ายไป `inbox/imported/`) หรือ "ทิ้งไฟล์" (ย้ายไป `inbox/rejected/`)
+
+ไฟล์ที่มีแถวผิดจะแสดงรายการปัญหาตามเลขแถวในหน้าพรีวิว และกดนำเข้าไม่ได้ ยังอัปโหลดไฟล์ตรงที่ `/admin/import` ได้เหมือนเดิม
+ตำแหน่งโฟลเดอร์ตั้งได้ด้วย `IMPORT_INBOX_DIR` (ค่าเริ่ม `./inbox` ของโปรเซส backend; ใน Docker คือ `./inbox` ของโปรเจกต์)
 
 ## ไฟล์นำเข้า
 

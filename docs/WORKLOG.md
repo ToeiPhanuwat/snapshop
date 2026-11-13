@@ -103,3 +103,10 @@
 - Server Actions `importInboxAction` / `discardInboxAction` ผ่าน `lib/api/admin.ts` (ตรวจล็อกอินซ้ำ) แล้ว redirect กลับรายการพร้อมผล
 - เมนู: "ไฟล์รอนำเข้า" และเปลี่ยน "นำเข้า" เป็น "อัปโหลด"; หน้าภาพรวมแสดงแถบจำนวนไฟล์รอ
 - lint, typecheck, build ผ่าน
+
+## 2026-11-13 — หน่วย 11: Docker และเอกสารสำหรับ inbox
+- compose: backend mount `./inbox:/app/inbox` + `IMPORT_INBOX_DIR=/app/inbox`; `inbox/` อยู่ใน `.gitignore`
+- README: ขั้นตอน "วางไฟล์ใน inbox → พรีวิว → นำเข้า/ทิ้ง"; GLOSSARY: inbox, พรีวิว
+- ตรวจ (ไม่ใช้รหัสผ่าน admin ตามข้อตกลง): `docker compose --profile app up -d --build` ผ่าน; `/api/admin/inbox` และ `/admin/inbox` ไม่ล็อกอิน = 401; ใน container เห็นไฟล์และเขียนโฟลเดอร์ได้
+- วางไฟล์ตัวอย่าง `inbox/drpong_20261110_sample.csv` (ข้อมูลชุดเดียวกับที่อยู่ใน DB แล้ว — พรีวิวควรได้ราคาเท่าเดิม 192, ใหม่ 0) ให้ผู้ใช้ลองพรีวิว/นำเข้า/ทิ้งเอง
+- **ยังไม่ได้ทดสอบ**: กดปุ่มในหน้า admin ใน browser (ต้องใช้รหัสผ่าน admin ซึ่งผมไม่ใช้) — ฝั่ง backend มี integration test ครอบทุกปุ่ม

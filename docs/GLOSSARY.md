@@ -19,3 +19,5 @@
 | สถานะ | `OK` แสดงได้, `NOT_IN_LATEST` ไม่อยู่ในรอบล่าสุด, `TEST` สินค้าทดสอบ, `OUT_OF_STOCK` สินค้าหมด, `REVIEW` รอ admin ตัดสิน | `ProductStatus` |
 | แสดงฝั่ง user | แถวปัจจุบัน + สถานะ `OK` + กลุ่มมีรายการแบบนี้ ≥ 2 | view `public_product` |
 | ลิงก์หลัก | `affiliate_url` ถ้าว่างใช้ `product_url` | `ProductLink` |
+| inbox | โฟลเดอร์ที่วางไฟล์ CSV ที่เตรียมแล้ว รอ admin ตัดสิน; นำเข้าแล้วย้ายไป `imported/`, ทิ้งแล้วย้ายไป `rejected/` | `InboxService`, `IMPORT_INBOX_DIR` |
+| พรีวิว | ผลที่การนำเข้าไฟล์จะทำ คำนวณด้วยโค้ดเดียวกับนำเข้าจริงแต่ไม่บันทึก | `ImportService.preview`, `ImportPreviewResponse` |
