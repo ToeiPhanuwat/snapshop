@@ -4,7 +4,6 @@
 
 # research data and personal notes stay local
 research/
-SKILL.md
 temp.txt
 
 # build output
@@ -19,3 +18,6 @@ frontend/next-env.d.ts
 
 # local tool config
 .claude/
+
+# files waiting for import (placed by AI, imported by admin)
+inbox/
