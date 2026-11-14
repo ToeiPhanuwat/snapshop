@@ -2,9 +2,9 @@ import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/api";
 import { ShopTypeBadge } from "./ShopTypeBadge";
 
-/** Every shop's offer for one product type, cheapest first (order comes from the API). */
+/** Every shop's offer for one product type, in the order the API sends (cheapest first). */
 export function PriceTable({ offers }: { offers: Product[] }) {
-  const cheapest = offers[0]?.price;
+  const cheapest = Math.min(...offers.map((o) => o.price));
   return (
     <ul className="divide-y divide-zinc-100 overflow-hidden rounded-xl bg-white ring-1 ring-zinc-200">
       {offers.map((offer) => (
