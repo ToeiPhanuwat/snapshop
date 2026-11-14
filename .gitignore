@@ -1,0 +1,23 @@
+# secrets
+.env
+*.env.local
+
+# research data and personal notes stay local
+research/
+temp.txt
+
+# build output
+backend/target/
+frontend/node_modules/
+frontend/.next/
+frontend/next-env.d.ts
+
+# IDE
+.idea/
+.vscode/
+
+# local tool config
+.claude/
+
+# files waiting for import (placed by AI, imported by admin)
+inbox/
