@@ -21,3 +21,7 @@
 | ลิงก์หลัก | `affiliate_url` ถ้าว่างใช้ `product_url` | `ProductLink` |
 | inbox | โฟลเดอร์ที่วางไฟล์ CSV ที่เตรียมแล้ว รอ admin ตัดสิน; นำเข้าแล้วย้ายไป `imported/`, ทิ้งแล้วย้ายไป `rejected/` | `InboxService`, `IMPORT_INBOX_DIR` |
 | พรีวิว | ผลที่การนำเข้าไฟล์จะทำ คำนวณด้วยโค้ดเดียวกับนำเข้าจริงแต่ไม่บันทึก | `ImportService.preview`, `ImportPreviewResponse` |
+| F1 | ไฟล์ลิงก์ affiliate จากปุ่ม "รับลิงก์แบบทีเดียวทั้งหมด" ในพอร์ทัล Shopee Affiliate (≤ 100 รายการต่อไฟล์) — [DATA-FLOW.md](DATA-FLOW.md#f1--ลิงก์-affiliate-จากพอร์ทัล) | นอกระบบ |
+| F2 | ข้อมูลจากการ์ดสินค้าในหน้าค้นหา: item_id, ราคา, ประเภทร้าน, รูป — [DATA-FLOW.md](DATA-FLOW.md#f2--การ์ดสินค้าในหน้าค้นหา) | นอกระบบ |
+| Merge | รวม F1 + F2 ด้วย item_id; ราคาใช้จาก F2; คงชื่อสินค้าเต็ม | นอกระบบ |
+| ไฟล์ merged / ไฟล์นำเข้า | ผลของ Merge + แยกชนิดสินค้า (14 คอลัมน์) ที่วางใน inbox หรืออัปโหลด | `CsvImportParser` |

@@ -11,6 +11,7 @@ commit บน feature branch เท่านั้น ไม่ commit/push เ�
 - ข้อมูลที่ Claude เตรียม (merge + แยกชนิดสินค้า) ให้วางเป็นไฟล์ CSV ใน `inbox/` — admin พรีวิวและกดนำเข้าเองที่ `/admin/inbox`
 - ไฟล์นำเข้าต้องมีชื่อสินค้าเต็ม (ระบบแยก name_prefix ที่ "Dr." เอง) รูปแบบคอลัมน์อยู่ใน README.md
 - ไม่ทำ automation ที่พรางตัวเป็นคนบน Shopee
+- Flow ข้อมูลตั้งแต่ F1/F2 ถึงเว็บ, การตัดสินใจและคำถามที่ยังเปิด: docs/DATA-FLOW.md
 - ศัพท์ของโดเมน: docs/GLOSSARY.md · บันทึกงานทุกขั้นพร้อมเหตุผล: docs/WORKLOG.md
 
 ## คำสั่งที่ใช้บ่อย (Windows, Git Bash)
