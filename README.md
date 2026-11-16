@@ -1,10 +1,10 @@
 # Snapshop — เปรียบเทียบราคาสินค้าจาก Shopee Affiliate
 
-ระบบรับไฟล์ CSV ที่ merge และจัดกลุ่มแล้ว (ขั้น F1–F4 ทำนอกระบบ) → เก็บใน PostgreSQL → API → เว็บ
+ระบบรับไฟล์ CSV ที่ merge และจัดกลุ่มแล้ว (ขั้น F1, F2, Merge, แยกชนิดสินค้า ทำนอกระบบ — ดู [docs/DATA-FLOW.md](docs/DATA-FLOW.md)) → เก็บใน PostgreSQL → API → เว็บ
 - **ฝั่ง user** (`/`) แสดงกลุ่มสินค้าที่มีร้านขาย ≥ 2 ร้าน พร้อมราคาแต่ละร้าน และลิงก์ affiliate (ไม่มีให้ใช้ลิงก์สินค้า)
 - **ฝั่ง admin** (`/admin`, ล็อกอินแบบ HTTP Basic) นำเข้าไฟล์, ดูทุกรายการ, ตรวจ REVIEW, ย้ายกลุ่ม, บันทึกเลิกขาย
 
-ศัพท์ที่ใช้: [docs/GLOSSARY.md](docs/GLOSSARY.md) · บันทึกการทำงาน: [docs/WORKLOG.md](docs/WORKLOG.md)
+Flow ข้อมูลตั้งแต่ F1 ถึงเว็บ: [docs/DATA-FLOW.md](docs/DATA-FLOW.md) · ศัพท์ที่ใช้: [docs/GLOSSARY.md](docs/GLOSSARY.md) · บันทึกการทำงาน: [docs/WORKLOG.md](docs/WORKLOG.md)
 
 ## โครงสร้าง
 
