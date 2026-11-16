@@ -21,13 +21,16 @@ import com.snapshop.service.importing.ImportPlan.SeenAgain;
 import com.snapshop.service.importing.ImportPlanner;
 import com.snapshop.service.importing.ImportRow;
 import com.snapshop.service.importing.TypeRef;
+import com.snapshop.service.feed.FeedRequest;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,15 +44,18 @@ public class ImportService {
 	private final ProductTypeRepository types;
 	private final MarketplaceProductRepository products;
 	private final ImportBatchRepository batches;
+	private final ApplicationEventPublisher events;
 
 	public ImportService(CsvImportParser parser, ImportPlanner planner, ImportLockRepository lock,
-			ProductTypeRepository types, MarketplaceProductRepository products, ImportBatchRepository batches) {
+			ProductTypeRepository types, MarketplaceProductRepository products, ImportBatchRepository batches,
+			ApplicationEventPublisher events) {
 		this.parser = parser;
 		this.planner = planner;
 		this.lock = lock;
 		this.types = types;
 		this.products = products;
 		this.batches = batches;
+		this.events = events;
 	}
 
 	@Transactional
@@ -60,7 +66,15 @@ public class ImportService {
 		Instant now = Instant.now();
 		ImportBatch batch = batches.save(new ImportBatch(category, fileName, prepared.counts(), now));
 		new PlanApplier(category, batch.getId(), now, prepared.activeById()).apply(prepared.plan());
+		events.publishEvent(feedRequest(batch.getId(), rows, prepared.plan()));
 		return ImportResultResponse.from(batch);
+	}
+
+	/** The look-up in the feed that follows a committed import; items without a usable file price rely on it. */
+	private static FeedRequest feedRequest(long batchId, List<ImportRow> rows, ImportPlan plan) {
+		Set<Long> noFilePrice = rows.stream().filter(r -> r.price() == null).map(ImportRow::itemId)
+				.collect(Collectors.toSet());
+		return new FeedRequest(batchId, Set.copyOf(plan.feedItemIds()), noFilePrice);
 	}
 
 	/** What {@link #importFile} would change, computed by the same code, without writing anything. */

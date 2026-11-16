@@ -26,3 +26,5 @@ server:
 snapshop:
   import:
     inbox-dir: ${IMPORT_INBOX_DIR:./inbox}
+  feed:
+    url: ${FEED_URL:}
