@@ -34,7 +34,7 @@ async function TypeGrid({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
   return (
     <>
       <p className="text-sm text-zinc-500">{types.total} ชนิดสินค้า</p>
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {types.items.map((type) => (
           <li key={type.code}>
             <ProductTypeCard type={type} />
