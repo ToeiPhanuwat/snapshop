@@ -1,13 +1,10 @@
 package com.snapshop.service.importing;
 
 import com.snapshop.exception.ImportValidationException;
-import java.io.BufferedReader;
+import com.snapshop.service.CsvReaders;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +24,7 @@ public class CsvImportParser {
 			.get();
 
 	public List<ImportRow> parse(InputStream in) {
-		try (CSVParser csv = FORMAT.parse(reader(in))) {
+		try (CSVParser csv = FORMAT.parse(CsvReaders.utf8(in))) {
 			requireColumns(csv.getHeaderNames());
 			return readRows(csv);
 		} catch (IOException e) {
@@ -56,15 +53,6 @@ public class CsvImportParser {
 		if (!missing.isEmpty()) {
 			throw new ImportValidationException(List.of("ไม่พบคอลัมน์: " + String.join(", ", missing)));
 		}
-	}
-
-	private static Reader reader(InputStream in) throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-		reader.mark(1);
-		if (reader.read() != '﻿') {
-			reader.reset();
-		}
-		return reader;
 	}
 
 }

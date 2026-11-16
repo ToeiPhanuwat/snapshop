@@ -153,6 +153,63 @@ public class MarketplaceProduct {
 			String productUrl, String affiliateUrl) {
 	}
 
+	/** What the feed says about the shop and the item; a null value means the feed has none and keeps what is stored. */
+	public record FeedExtras(ShopType shopType, BigDecimal listPrice, Integer stock, BigDecimal itemRating,
+			BigDecimal shopRating, String imageUrl) {
+	}
+
+	public void applyFeed(FeedExtras extras, Instant now) {
+		this.shopType = extras.shopType();
+		this.listPrice = extras.listPrice();
+		this.stock = extras.stock();
+		this.itemRating = extras.itemRating();
+		this.shopRating = extras.shopRating();
+		if (extras.imageUrl() != null) {
+			this.imageUrl = extras.imageUrl();
+		}
+		this.feedSyncedAt = now;
+	}
+
+	/** The file had no usable price; the feed's price makes an item that was waiting for it ready to show. */
+	public void fillPriceFromFeed(BigDecimal feedPrice) {
+		this.price = feedPrice;
+		if (status == ProductStatus.PRICE_PENDING) {
+			this.status = ProductStatus.OK;
+		}
+	}
+
+	/** The next price version of this item: same listing and extras, new price, first seen in {@code batchId}. */
+	public MarketplaceProduct nextPriceVersion(BigDecimal newPrice, long batchId, Instant now) {
+		MarketplaceProduct next = new MarketplaceProduct();
+		next.itemId = itemId;
+		next.shopId = shopId;
+		next.shopName = shopName;
+		next.shopType = shopType;
+		next.namePrefix = namePrefix;
+		next.nameCore = nameCore;
+		next.nameRaw = nameRaw;
+		next.productTypeId = productTypeId;
+		next.price = newPrice;
+		next.soldText = soldText;
+		next.commissionRate = commissionRate;
+		next.commissionAmount = commissionAmount;
+		next.productUrl = productUrl;
+		next.affiliateUrl = affiliateUrl;
+		next.imageUrl = imageUrl;
+		next.listPrice = listPrice;
+		next.stock = stock;
+		next.itemRating = itemRating;
+		next.shopRating = shopRating;
+		next.feedSyncedAt = feedSyncedAt;
+		next.status = status;
+		next.activeFlag = ActiveFlag.Y;
+		next.importBatchId = batchId;
+		next.lastSeenBatchId = batchId;
+		next.lastSeenAt = now;
+		next.createdAt = now;
+		return next;
+	}
+
 	public void markSeen(ProductStatus newStatus, long batchId, Instant now) {
 		this.status = newStatus;
 		this.lastSeenBatchId = batchId;

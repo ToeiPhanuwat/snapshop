@@ -108,6 +108,14 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
+			<!-- The test HTTP server (FeedClientTest) needs a writable folder for the Windows loopback socket -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} -Djdk.net.unixdomain.tmpdir=${project.build.directory}</argLine>
+				</configuration>
+			</plugin>
 			<!-- Coverage, input for tools/crap.py (Crapper) -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
