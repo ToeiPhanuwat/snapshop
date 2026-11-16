@@ -27,7 +27,7 @@ final class ImportPreviews {
 				plan.newTypes().stream().map(NewType::name).toList(),
 				priceChanges(plan, activeById),
 				plan.notInLatest().stream().map(id -> line(activeById.get(id))).toList(),
-				toReview(plan, activeById));
+				toReview(plan, activeById), plan.feedItemIds().size());
 	}
 
 	private static List<PriceChange> priceChanges(ImportPlan plan, Map<Long, MarketplaceProduct> activeById) {

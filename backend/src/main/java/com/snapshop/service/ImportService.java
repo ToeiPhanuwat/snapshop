@@ -142,9 +142,9 @@ public class ImportService {
 		}
 
 		private static MarketplaceProduct.Listing listing(ImportRow r) {
-			return new MarketplaceProduct.Listing(r.itemId(), r.shopId(), r.shopName(), r.shopType(),
-					r.name().prefix(), r.name().core(), r.price(), r.soldText(), r.commissionRate(),
-					r.commissionAmount(), r.productUrl(), r.affiliateUrl(), r.imageUrl());
+			return new MarketplaceProduct.Listing(r.itemId(), r.shopId(), r.shopName(), r.name().prefix(),
+					r.name().core(), r.price(), r.soldText(), r.commissionRate(), r.commissionAmount(),
+					r.productUrl(), r.affiliateUrl());
 		}
 
 	}

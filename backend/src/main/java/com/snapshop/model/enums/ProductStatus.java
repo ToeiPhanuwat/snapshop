@@ -8,5 +8,7 @@ public enum ProductStatus {
 	TEST,
 	OUT_OF_STOCK,
 	/** Waiting for an admin decision; stays until resolved. */
-	REVIEW
+	REVIEW,
+	/** The file showed an abbreviated price; the price comes from the feed. Hidden until it arrives. */
+	PRICE_PENDING
 }

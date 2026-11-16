@@ -1,7 +1,6 @@
 package com.snapshop.service.importing;
 
 import com.snapshop.model.enums.GroupingMethod;
-import com.snapshop.model.enums.ShopType;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,6 @@ final class RecordReader {
 		Optional<Long> shopId = itemId.flatMap(this::shopId);
 		Optional<String> shopName = required(Columns.SHOP_NAME, "ชื่อร้านค้าว่าง");
 		Optional<String> name = required(Columns.NAME, "ชื่อสินค้าว่าง");
-		Optional<ShopType> shopType = label(Columns.SHOP_TYPE, "ประเภทร้านค้าไม่รู้จัก", ShopType::fromLabel);
 		Optional<String> groupLabel = required(Columns.GROUP_LABEL, "รหัสกลุ่มว่าง");
 		Optional<String> groupName = required(Columns.GROUP_NAME, "ชื่อกลุ่มว่าง");
 		Optional<GroupingMethod> method = label(Columns.GROUPING_METHOD, "วิธีจัดกลุ่มไม่รู้จัก",
@@ -45,9 +43,9 @@ final class RecordReader {
 			return Optional.empty();
 		}
 		return Optional.of(new ImportRow(line, itemId.orElseThrow(), shopId.orElseThrow(), shopName.orElseThrow(),
-				shopType.orElseThrow(), ProductName.of(name.orElseThrow()), amount(Columns.PRICE),
+				ProductName.of(name.orElseThrow()), amount(Columns.PRICE),
 				optional(Columns.SOLD), amount(Columns.COMMISSION_RATE), amount(Columns.COMMISSION),
-				get(Columns.PRODUCT_URL).strip(), optional(Columns.AFFILIATE_URL), optional(Columns.IMAGE_URL),
+				get(Columns.PRODUCT_URL).strip(), optional(Columns.AFFILIATE_URL),
 				groupLabel.orElseThrow(), groupName.orElseThrow(), method.orElseThrow()));
 	}
 

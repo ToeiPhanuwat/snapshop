@@ -18,7 +18,10 @@ import java.time.Instant;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/** One price version of an item. Fields describing the listing are fixed once the version is created. */
+/**
+ * One price version of an item. Fields describing the listing are fixed once the version is created, except those
+ * the feed fills in later: price (when the file only had an abbreviated one), shop type, image and the extras.
+ */
 @Entity
 @Table(name = "marketplace_product")
 public class MarketplaceProduct {
@@ -38,7 +41,7 @@ public class MarketplaceProduct {
 	private String shopName;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "shop_type", nullable = false, updatable = false)
+	@Column(name = "shop_type", nullable = false)
 	private ShopType shopType;
 
 	@Column(name = "name_prefix", nullable = false, updatable = false)
@@ -53,7 +56,7 @@ public class MarketplaceProduct {
 	@Column(name = "product_type_id", nullable = false)
 	private long productTypeId;
 
-	@Column(name = "price", updatable = false)
+	@Column(name = "price")
 	private BigDecimal price;
 
 	@Column(name = "sold_text", updatable = false)
@@ -71,8 +74,23 @@ public class MarketplaceProduct {
 	@Column(name = "affiliate_url", updatable = false)
 	private String affiliateUrl;
 
-	@Column(name = "image_url", updatable = false)
+	@Column(name = "image_url")
 	private String imageUrl;
+
+	@Column(name = "list_price")
+	private BigDecimal listPrice;
+
+	@Column(name = "stock")
+	private Integer stock;
+
+	@Column(name = "item_rating")
+	private BigDecimal itemRating;
+
+	@Column(name = "shop_rating")
+	private BigDecimal shopRating;
+
+	@Column(name = "feed_synced_at")
+	private Instant feedSyncedAt;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
@@ -110,7 +128,7 @@ public class MarketplaceProduct {
 		this.itemId = listing.itemId();
 		this.shopId = listing.shopId();
 		this.shopName = listing.shopName();
-		this.shopType = listing.shopType();
+		this.shopType = ShopType.REGULAR;
 		this.namePrefix = listing.namePrefix();
 		this.nameCore = listing.nameCore();
 		this.nameRaw = listing.namePrefix() + listing.nameCore();
@@ -120,7 +138,6 @@ public class MarketplaceProduct {
 		this.commissionAmount = listing.commissionAmount();
 		this.productUrl = listing.productUrl();
 		this.affiliateUrl = listing.affiliateUrl();
-		this.imageUrl = listing.imageUrl();
 		this.productTypeId = productTypeId;
 		this.status = status;
 		this.activeFlag = ActiveFlag.Y;
@@ -131,9 +148,9 @@ public class MarketplaceProduct {
 	}
 
 	/** What the import file says about an item. */
-	public record Listing(long itemId, long shopId, String shopName, ShopType shopType, String namePrefix,
-			String nameCore, BigDecimal price, String soldText, BigDecimal commissionRate, BigDecimal commissionAmount,
-			String productUrl, String affiliateUrl, String imageUrl) {
+	public record Listing(long itemId, long shopId, String shopName, String namePrefix, String nameCore,
+			BigDecimal price, String soldText, BigDecimal commissionRate, BigDecimal commissionAmount,
+			String productUrl, String affiliateUrl) {
 	}
 
 	public void markSeen(ProductStatus newStatus, long batchId, Instant now) {
@@ -229,6 +246,26 @@ public class MarketplaceProduct {
 
 	public String getImageUrl() {
 		return imageUrl;
+	}
+
+	public BigDecimal getListPrice() {
+		return listPrice;
+	}
+
+	public Integer getStock() {
+		return stock;
+	}
+
+	public BigDecimal getItemRating() {
+		return itemRating;
+	}
+
+	public BigDecimal getShopRating() {
+		return shopRating;
+	}
+
+	public Instant getFeedSyncedAt() {
+		return feedSyncedAt;
 	}
 
 	public ProductStatus getStatus() {

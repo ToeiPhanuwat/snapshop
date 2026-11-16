@@ -30,9 +30,11 @@ class PublicApiTest {
 	void importCatalog() throws Exception {
 		jdbc.sql("TRUNCATE marketplace_product, product_type, import_batch RESTART IDENTITY CASCADE").update();
 		upload(baseCatalog());
+		jdbc.sql("UPDATE marketplace_product SET shop_type = 'MALL' WHERE item_id = 1").update();
+		jdbc.sql("UPDATE marketplace_product SET shop_type = 'PREFERRED' WHERE item_id = 2").update();
 	}
 
-	/** Serum: 2 shops; Cream: 1 shop; Toner: 1 shop OK + 1 shop REVIEW (abbreviated price). */
+	/** Serum: 2 shops; Cream: 1 shop; Toner: 1 shop OK + 1 shop waiting for its price from the feed. */
 	static TestCsv baseCatalog() {
 		return csv()
 				.item(1, "promo Dr.PONG Serum 15ml", "100", "Shop A", "Mall", "E001", "Dr.PONG Serum")
