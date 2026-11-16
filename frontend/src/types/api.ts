@@ -1,7 +1,7 @@
 // Types that mirror the backend response DTOs (backend/src/main/java/com/snapshop/dto/response).
 
 export type ShopType = "MALL" | "PREFERRED" | "REGULAR";
-export type ProductStatus = "OK" | "NOT_IN_LATEST" | "TEST" | "OUT_OF_STOCK" | "REVIEW";
+export type ProductStatus = "OK" | "NOT_IN_LATEST" | "TEST" | "OUT_OF_STOCK" | "REVIEW" | "PRICE_PENDING";
 export type GroupingMethod = "ENGLISH_NAME_MATCH" | "FORMULA_RULE" | "NO_MATCH";
 export type ProductSort = "PRICE_ASC" | "PRICE_DESC" | "NAME";
 
@@ -18,6 +18,8 @@ export interface ProductTypeSummary {
   offerCount: number;
   minPrice: number;
   maxPrice: number;
+  /** Image of the cheapest offer that has one; null when no offer has an image. */
+  imageUrl: string | null;
 }
 
 export interface Product {
@@ -32,6 +34,7 @@ export interface Product {
   link: string;
   productTypeCode: string;
   typeName: string;
+  imageUrl: string | null;
 }
 
 export interface ProductTypeDetail extends ProductTypeSummary {
@@ -106,4 +109,19 @@ export interface ImportPreview {
   priceChanges: (ItemLine & { oldPrice: number | null; newPrice: number })[];
   toHide: ItemLine[];
   toReview: ItemLine[];
+  /** Items the system will look up in the feed once the import is done. */
+  feedItemCount: number;
+}
+
+export type FeedSyncOutcome = "RUNNING" | "DONE" | "INCOMPLETE" | "RATE_LIMITED" | "FAILED";
+
+export interface FeedSyncRun {
+  runId: number;
+  importBatchId: number | null;
+  startedAt: string;
+  finishedAt: string | null;
+  requestedCount: number;
+  foundCount: number;
+  outcome: FeedSyncOutcome;
+  message: string | null;
 }

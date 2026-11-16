@@ -8,6 +8,7 @@ const TONE: Record<ProductStatus, BadgeTone> = {
   TEST: "neutral",
   OUT_OF_STOCK: "neutral",
   REVIEW: "warn",
+  PRICE_PENDING: "info",
 };
 
 export function StatusBadge({ status }: { status: ProductStatus }) {
