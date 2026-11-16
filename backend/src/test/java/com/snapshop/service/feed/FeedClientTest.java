@@ -64,6 +64,32 @@ class FeedClientTest {
 				.isEqualTo(FeedResult.Outcome.FAILED);
 	}
 
+	@Test
+	void reportsFailureWhenTheFeedCannotBeReached() throws IOException {
+		serve(200, null, "");
+		FeedClient unreachable = client();
+		server.stop(0);
+
+		FeedResult result = unreachable.fetch(Set.of(11L));
+
+		assertThat(result.outcome()).isEqualTo(FeedResult.Outcome.FAILED);
+		assertThat(result.message()).contains("เชื่อมต่อฟีดไม่ได้");
+	}
+
+	@Test
+	void keepsTheInterruptFlagWhenTheThreadIsInterrupted() throws IOException {
+		serve(200, null, FeedReaderTest.HEADER);
+		Thread.currentThread().interrupt();
+		try {
+			FeedResult result = client().fetch(Set.of(11L));
+
+			assertThat(result.outcome()).isEqualTo(FeedResult.Outcome.FAILED);
+			assertThat(Thread.currentThread().isInterrupted()).isTrue();
+		} finally {
+			Thread.interrupted();
+		}
+	}
+
 	private FeedClient client() {
 		return new FeedClient(new FeedProperties("http://localhost:" + server.getAddress().getPort() + "/feed",
 				Duration.ofSeconds(2), Duration.ofSeconds(5)));

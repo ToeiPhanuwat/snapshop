@@ -24,8 +24,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 @IntegrationTest
+@RecordApplicationEvents
 class FeedSyncServiceTest {
 
 	@Autowired
@@ -39,6 +42,9 @@ class FeedSyncServiceTest {
 
 	@MockitoBean
 	FeedClient client;
+
+	@Autowired
+	ApplicationEvents events;
 
 	@BeforeEach
 	void emptyDatabase() {
@@ -93,6 +99,21 @@ class FeedSyncServiceTest {
 		assertThat(run.outcome()).isEqualTo("RATE_LIMITED");
 		assertThat(run.message()).contains("1800");
 		assertThat(status(2)).isEqualTo("PRICE_PENDING");
+	}
+
+	@Test
+	void importAsksForNewItemsPriceChangesAndAbbreviatedPrices() throws IOException {
+		importFile(csv().item(1, "100", "E001", "Serum").item(2, "100", "E001", "Serum").item(3, "1.0พัน", "E001", "Serum"));
+
+		ImportResultResponse second = importFile(csv().item(1, "100", "E001", "Serum").item(2, "90", "E001", "Serum")
+				.item(3, "1.0พัน", "E001", "Serum").item(4, "50", "U001", "Cream"));
+
+		var requests = events.stream(FeedRequest.class).toList();
+		assertThat(requests).hasSize(2);
+		FeedRequest latest = requests.getLast();
+		assertThat(latest.batchId()).isEqualTo(second.batchId());
+		assertThat(latest.itemIds()).containsExactlyInAnyOrder(2L, 3L, 4L);
+		assertThat(latest.feedPricedItemIds()).containsExactly(3L);
 	}
 
 	@Test

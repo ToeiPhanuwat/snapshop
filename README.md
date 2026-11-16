@@ -106,7 +106,7 @@ CRAP ต่อ method (เกณฑ์ < 10)
 ```bash
 cd backend && ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage
 ```
-Mutation test กฎนำเข้า (เกณฑ์ 90%)
+Mutation test กฎนำเข้าและแกน feed (`FeedPlanner`, `FeedReader`, `FeedClient`) (เกณฑ์ 90%)
 
 ```bash
 cd frontend && npm run lint && npm run build

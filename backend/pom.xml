@@ -172,9 +172,15 @@
 					<targetClasses>
 						<param>com.snapshop.service.importing.*</param>
 						<param>com.snapshop.model.enums.*</param>
+						<param>com.snapshop.service.feed.FeedPlanner</param>
+						<param>com.snapshop.service.feed.FeedReader</param>
+						<param>com.snapshop.service.feed.FeedClient</param>
 					</targetClasses>
 					<targetTests>
 						<param>com.snapshop.service.importing.*Test</param>
+						<param>com.snapshop.service.feed.FeedPlannerTest</param>
+						<param>com.snapshop.service.feed.FeedReaderTest</param>
+						<param>com.snapshop.service.feed.FeedClientTest</param>
 					</targetTests>
 					<outputFormats>
 						<param>HTML</param>
