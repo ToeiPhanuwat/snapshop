@@ -71,6 +71,23 @@ class PublicApiTest {
 	}
 
 	@Test
+	void groupImageIsTheCheapestOffersImageThatHasOne() throws Exception {
+		jdbc.sql("UPDATE marketplace_product SET image_url = 'https://cf/two' WHERE item_id = 2").update();
+
+		mvc.perform(get("/api/product-types"))
+				.andExpect(jsonPath("$.items[0].imageUrl").value("https://cf/two"));
+		mvc.perform(get("/api/product-types/{code}", serumCode()))
+				.andExpect(jsonPath("$.imageUrl").value("https://cf/two"))
+				.andExpect(jsonPath("$.offers[0].imageUrl").doesNotExist())
+				.andExpect(jsonPath("$.offers[1].imageUrl").value("https://cf/two"));
+	}
+
+	@Test
+	void groupWithoutAnyImageHasNoImageUrl() throws Exception {
+		mvc.perform(get("/api/product-types")).andExpect(jsonPath("$.items[0].imageUrl").doesNotExist());
+	}
+
+	@Test
 	void hiddenGroupIsNotFound() throws Exception {
 		String creamCode = jdbc.sql("SELECT product_type_code FROM product_type WHERE type_name = 'Cream'")
 				.query(String.class).single();
