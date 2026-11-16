@@ -33,10 +33,11 @@ export function ImportPreviewView({ preview }: { preview: ImportPreview }) {
     ["ราคาเท่าเดิม", preview.unchangedCount],
     ["จะถูกซ่อน", preview.notInLatestCount],
     ["กลุ่มใหม่", preview.newTypeCount],
+    ["ดึงจากฟีด", preview.feedItemCount],
   ] as const;
   return (
     <div className="space-y-3">
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
         {counts.map(([label, value]) => (
           <div key={label} className="rounded-xl bg-white p-3 ring-1 ring-zinc-200">
             <dt className="text-xs text-zinc-500">{label}</dt>

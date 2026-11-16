@@ -30,9 +30,11 @@ class PublicApiTest {
 	void importCatalog() throws Exception {
 		jdbc.sql("TRUNCATE marketplace_product, product_type, import_batch RESTART IDENTITY CASCADE").update();
 		upload(baseCatalog());
+		jdbc.sql("UPDATE marketplace_product SET shop_type = 'MALL' WHERE item_id = 1").update();
+		jdbc.sql("UPDATE marketplace_product SET shop_type = 'PREFERRED' WHERE item_id = 2").update();
 	}
 
-	/** Serum: 2 shops; Cream: 1 shop; Toner: 1 shop OK + 1 shop REVIEW (abbreviated price). */
+	/** Serum: 2 shops; Cream: 1 shop; Toner: 1 shop OK + 1 shop waiting for its price from the feed. */
 	static TestCsv baseCatalog() {
 		return csv()
 				.item(1, "promo Dr.PONG Serum 15ml", "100", "Shop A", "Mall", "E001", "Dr.PONG Serum")
@@ -66,6 +68,23 @@ class PublicApiTest {
 				.andExpect(jsonPath("$.offers[0].shopType").value("MALL"))
 				.andExpect(jsonPath("$.offers[0].link").value("https://s.shopee.co.th/a1"))
 				.andExpect(jsonPath("$.offers[1].shopType").value("PREFERRED"));
+	}
+
+	@Test
+	void groupImageIsTheCheapestOffersImageThatHasOne() throws Exception {
+		jdbc.sql("UPDATE marketplace_product SET image_url = 'https://cf/two' WHERE item_id = 2").update();
+
+		mvc.perform(get("/api/product-types"))
+				.andExpect(jsonPath("$.items[0].imageUrl").value("https://cf/two"));
+		mvc.perform(get("/api/product-types/{code}", serumCode()))
+				.andExpect(jsonPath("$.imageUrl").value("https://cf/two"))
+				.andExpect(jsonPath("$.offers[0].imageUrl").doesNotExist())
+				.andExpect(jsonPath("$.offers[1].imageUrl").value("https://cf/two"));
+	}
+
+	@Test
+	void groupWithoutAnyImageHasNoImageUrl() throws Exception {
+		mvc.perform(get("/api/product-types")).andExpect(jsonPath("$.items[0].imageUrl").doesNotExist());
 	}
 
 	@Test

@@ -24,6 +24,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:?set ADMIN_USERNAME in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       IMPORT_INBOX_DIR: /app/inbox
+      FEED_URL: ${FEED_URL:-}
     volumes:
       - ./inbox:/app/inbox
     ports:

@@ -10,6 +10,7 @@ import java.util.List;
  * @param priceChanges items whose price would change
  * @param toHide       current items missing from the file, which would become NOT_IN_LATEST
  * @param toReview     items that would be in REVIEW after the import
+ * @param feedItemCount items the system will look up in the feed once the import is done
  */
 public record ImportPreviewResponse(
 		String fileName,
@@ -22,7 +23,8 @@ public record ImportPreviewResponse(
 		List<String> newTypes,
 		List<PriceChange> priceChanges,
 		List<ItemLine> toHide,
-		List<ItemLine> toReview) {
+		List<ItemLine> toReview,
+		int feedItemCount) {
 
 	public record PriceChange(long itemId, String name, BigDecimal oldPrice, BigDecimal newPrice) {
 	}

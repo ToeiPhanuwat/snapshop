@@ -5,6 +5,7 @@ import { basicAuthHeader, isAdminAuthorization } from "@/lib/auth";
 import type {
   AdminProduct,
   AdminProductType,
+  FeedSyncRun,
   ImportPreview,
   ImportResult,
   InboxFile,
@@ -89,4 +90,13 @@ export function importInbox(name: string): Promise<Result<ImportResult>> {
 
 export function discardInbox(name: string): Promise<Result<void>> {
   return adminRequest(`${inboxPath(name)}/discard`, { method: "POST" });
+}
+
+export function getFeedSyncs(): Promise<FeedSyncRun[]> {
+  return adminGet("/api/admin/feed-syncs");
+}
+
+/** 409 means no feed link is set, nothing is waiting, or a look-up is already running; the admin reads it. */
+export function retryFeedSync(): Promise<Result<void>> {
+  return adminRequest("/api/admin/feed-syncs", { method: "POST" });
 }

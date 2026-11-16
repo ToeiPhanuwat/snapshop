@@ -30,10 +30,11 @@ public class ProductQueryRepository {
 
 	private static final String PRODUCT_COLUMNS = """
 			item_id, name_prefix, name_core, shop_name, shop_type, price, sold_text, affiliate_url, product_url,
-			product_type_code, type_name""";
+			product_type_code, type_name, image_url""";
 
 	private static final String TYPE_SUMMARY = """
-			SELECT product_type_code, type_name, count(*) AS offer_count, min(price) AS min_price, max(price) AS max_price
+			SELECT product_type_code, type_name, count(*) AS offer_count, min(price) AS min_price, max(price) AS max_price,
+			       (array_agg(image_url ORDER BY price, item_id) FILTER (WHERE image_url IS NOT NULL))[1] AS image_url
 			FROM public_product""";
 
 	private static final String ADMIN_PRODUCT = """
@@ -162,7 +163,8 @@ public class ProductQueryRepository {
 
 	private static ProductTypeSummaryResponse typeSummary(ResultSet rs, int i) throws SQLException {
 		return new ProductTypeSummaryResponse(rs.getString("product_type_code"), rs.getString("type_name"),
-				rs.getInt("offer_count"), rs.getBigDecimal("min_price"), rs.getBigDecimal("max_price"));
+				rs.getInt("offer_count"), rs.getBigDecimal("min_price"), rs.getBigDecimal("max_price"),
+				rs.getString("image_url"));
 	}
 
 	private static ProductResponse product(ResultSet rs, int i) throws SQLException {
@@ -170,7 +172,7 @@ public class ProductQueryRepository {
 		String core = rs.getString("name_core");
 		return new ProductResponse(rs.getLong("item_id"), prefix + core, prefix, core, rs.getString("shop_name"),
 				ShopType.valueOf(rs.getString("shop_type")), rs.getBigDecimal("price"), rs.getString("sold_text"),
-				link(rs), rs.getString("product_type_code"), rs.getString("type_name"));
+				link(rs), rs.getString("product_type_code"), rs.getString("type_name"), rs.getString("image_url"));
 	}
 
 	private static AdminProductResponse adminProduct(ResultSet rs, int i) throws SQLException {

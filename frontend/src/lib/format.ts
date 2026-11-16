@@ -27,4 +27,5 @@ export const STATUS_LABEL: Record<ProductStatus, string> = {
   TEST: "สินค้าทดสอบ",
   OUT_OF_STOCK: "สินค้าหมด",
   REVIEW: "รอตรวจ",
+  PRICE_PENDING: "รอราคาจากฟีด",
 };

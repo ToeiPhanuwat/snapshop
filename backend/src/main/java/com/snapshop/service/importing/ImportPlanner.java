@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
@@ -55,6 +56,7 @@ public class ImportPlanner {
 		private final List<NewVersion> newVersions = new ArrayList<>();
 		private final List<SeenAgain> seenAgain = new ArrayList<>();
 		private final List<Long> notInLatest = new ArrayList<>();
+		private final Set<Long> feedItemIds = new TreeSet<>();
 
 		PlanBuilder(CurrentState state) {
 			this.state = state;
@@ -85,7 +87,8 @@ public class ImportPlanner {
 		}
 
 		ImportPlan build() {
-			return new ImportPlan(List.copyOf(newTypes.values()), newVersions, seenAgain, notInLatest);
+			return new ImportPlan(List.copyOf(newTypes.values()), newVersions, seenAgain, notInLatest,
+					List.copyOf(feedItemIds));
 		}
 
 		private boolean isKnown(ImportRow row) {
@@ -106,17 +109,23 @@ public class ImportPlanner {
 		}
 
 		private void addRow(ImportRow row, TypeRef type, boolean needsReview) {
-			ProductStatus status = statusOf(row, needsReview);
 			ActiveVersion active = state.activeByItem().get(row.itemId());
+			boolean priceKnown = row.price() != null || (active != null && active.price() != null);
+			ProductStatus status = statusOf(row, needsReview, priceKnown);
 			if (active == null) {
 				newVersions.add(new NewVersion(row, type, status, null));
+				feedItemIds.add(row.itemId());
 				return;
 			}
 			ProductStatus kept = keepReview(active.status(), status);
 			if (row.price() == null || samePrice(active.price(), row.price())) {
 				seenAgain.add(new SeenAgain(active.productId(), kept));
+				if (row.price() == null) {
+					feedItemIds.add(row.itemId());
+				}
 			} else {
 				newVersions.add(new NewVersion(row, type, kept, active.productId()));
+				feedItemIds.add(row.itemId());
 			}
 		}
 
@@ -131,17 +140,18 @@ public class ImportPlanner {
 				.getKey();
 	}
 
-	static ProductStatus statusOf(ImportRow row, boolean needsReview) {
+	/** @param priceKnown the file or the stored version has a price; if not, the feed has to supply it */
+	static ProductStatus statusOf(ImportRow row, boolean needsReview, boolean priceKnown) {
 		if (row.shopName().toLowerCase(Locale.ROOT).contains("test")) {
 			return ProductStatus.TEST;
 		}
 		if (row.name().raw().contains("สินค้าหมด")) {
 			return ProductStatus.OUT_OF_STOCK;
 		}
-		if (row.price() == null || needsReview) {
+		if (needsReview) {
 			return ProductStatus.REVIEW;
 		}
-		return ProductStatus.OK;
+		return priceKnown ? ProductStatus.OK : ProductStatus.PRICE_PENDING;
 	}
 
 	/** REVIEW stays until an admin resolves it. */

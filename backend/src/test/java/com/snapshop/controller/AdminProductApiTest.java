@@ -41,7 +41,7 @@ class AdminProductApiTest {
 	void adminSeesEveryCurrentItemAndCanFilterByStatus() throws Exception {
 		mvc.perform(get("/api/admin/products").with(ADMIN))
 				.andExpect(jsonPath("$.total").value(5));
-		mvc.perform(get("/api/admin/products").param("status", "REVIEW").with(ADMIN))
+		mvc.perform(get("/api/admin/products").param("status", "PRICE_PENDING").with(ADMIN))
 				.andExpect(jsonPath("$.items[*].itemId", contains(5)))
 				.andExpect(jsonPath("$.items[0].onUserSite").value(false));
 	}

@@ -78,7 +78,8 @@ class AdminInboxControllerTest {
 				.andExpect(jsonPath("$.insertedCount").value(192))
 				.andExpect(jsonPath("$.newTypeCount").value(122))
 				.andExpect(jsonPath("$.newTypes.length()").value(122))
-				.andExpect(jsonPath("$.toReview.length()").value(3));
+				.andExpect(jsonPath("$.toReview.length()").value(0))
+				.andExpect(jsonPath("$.feedItemCount").value(192));
 		assertThat(count("SELECT count(*) FROM marketplace_product") + count("SELECT count(*) FROM import_batch"))
 				.isZero();
 
@@ -89,7 +90,7 @@ class AdminInboxControllerTest {
 	}
 
 	@Test
-	void previewOfNextRoundListsPriceChangesHiddenItemsAndReviews() throws Exception {
+	void previewOfNextRoundListsPriceChangesHiddenItemsAndFeedLookups() throws Exception {
 		put("r1.csv", csv().item(1, "100", "E001", "Serum").item(2, "120", "E001", "Serum").item(3, "50", "U001", "Cream"));
 		mvc.perform(post("/api/admin/inbox/{name}/import", "r1.csv").with(ADMIN)).andExpect(status().isOk());
 
@@ -102,7 +103,8 @@ class AdminInboxControllerTest {
 				.andExpect(jsonPath("$.priceChanges[0].oldPrice").value(100))
 				.andExpect(jsonPath("$.priceChanges[0].newPrice").value(90))
 				.andExpect(jsonPath("$.toHide[*].itemId", contains(3)))
-				.andExpect(jsonPath("$.toReview[*].itemId", contains(2)))
+				.andExpect(jsonPath("$.toReview.length()").value(0))
+				.andExpect(jsonPath("$.feedItemCount").value(3))
 				.andExpect(jsonPath("$.newTypes", contains("Toner")));
 	}
 

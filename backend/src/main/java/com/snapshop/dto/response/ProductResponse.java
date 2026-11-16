@@ -8,6 +8,7 @@ import java.math.BigDecimal;
  *
  * @param displayName {@code namePrefix + nameCore}, the name exactly as the shop wrote it
  * @param link        affiliate link, or the product link when there is no affiliate link
+ * @param imageUrl    null when the feed has no image for this item
  */
 public record ProductResponse(
 		long itemId,
@@ -20,5 +21,6 @@ public record ProductResponse(
 		String soldText,
 		String link,
 		String productTypeCode,
-		String typeName) {
+		String typeName,
+		String imageUrl) {
 }

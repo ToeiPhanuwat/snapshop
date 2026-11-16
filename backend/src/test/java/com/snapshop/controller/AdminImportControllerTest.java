@@ -44,7 +44,7 @@ class AdminImportControllerTest {
 				.andExpect(jsonPath("$.priceChangedCount").value(0));
 
 		assertThat(statusCounts()).containsExactlyInAnyOrderEntriesOf(
-				Map.of("OK", 187L, "REVIEW", 3L, "TEST", 1L, "OUT_OF_STOCK", 1L));
+				Map.of("OK", 187L, "PRICE_PENDING", 3L, "TEST", 1L, "OUT_OF_STOCK", 1L));
 		assertThat(count("SELECT count(*) FROM marketplace_product WHERE name_prefix <> ''")).isEqualTo(95);
 	}
 

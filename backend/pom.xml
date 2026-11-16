@@ -108,6 +108,14 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
+			<!-- The test HTTP server (FeedClientTest) needs a writable folder for the Windows loopback socket -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} -Djdk.net.unixdomain.tmpdir=${project.build.directory}</argLine>
+				</configuration>
+			</plugin>
 			<!-- Coverage, input for tools/crap.py (Crapper) -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
@@ -164,9 +172,15 @@
 					<targetClasses>
 						<param>com.snapshop.service.importing.*</param>
 						<param>com.snapshop.model.enums.*</param>
+						<param>com.snapshop.service.feed.FeedPlanner</param>
+						<param>com.snapshop.service.feed.FeedReader</param>
+						<param>com.snapshop.service.feed.FeedClient</param>
 					</targetClasses>
 					<targetTests>
 						<param>com.snapshop.service.importing.*Test</param>
+						<param>com.snapshop.service.feed.FeedPlannerTest</param>
+						<param>com.snapshop.service.feed.FeedReaderTest</param>
+						<param>com.snapshop.service.feed.FeedClientTest</param>
 					</targetTests>
 					<outputFormats>
 						<param>HTML</param>

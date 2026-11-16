@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.snapshop.model.enums.GroupingMethod;
 import com.snapshop.model.enums.ProductStatus;
-import com.snapshop.model.enums.ShopType;
 import com.snapshop.service.importing.ImportPlan.NewType;
 import com.snapshop.service.importing.ImportPlan.NewVersion;
 import com.snapshop.service.importing.ImportPlan.SeenAgain;
@@ -123,13 +122,63 @@ class ImportPlannerTest {
 	}
 
 	@Test
-	void unknownPriceIsNotComparedAndNeedsReview() {
+	void unknownPriceIsNotComparedAndNewItemWaitsForTheFeed() {
 		state.active(1, 10, 100);
 
 		ImportPlan plan = plan(row(1, "E001", "S", null), row(2, "E001", "S", null));
 
-		assertThat(plan.seenAgain()).containsExactly(new SeenAgain(1001, ProductStatus.REVIEW));
-		assertNewVersion(single(plan.newVersions()), 2, new Existing(10), ProductStatus.REVIEW);
+		assertThat(plan.seenAgain()).containsExactly(new SeenAgain(1001, ProductStatus.OK));
+		assertNewVersion(single(plan.newVersions()), 2, new Existing(10), ProductStatus.PRICE_PENDING);
+	}
+
+	@Test
+	void unknownPriceOfItemStillWithoutPriceKeepsWaitingForTheFeed() {
+		state.activeWithoutPrice(1, 10);
+
+		ImportPlan plan = plan(row(1, "E001", "S", null));
+
+		assertThat(plan.seenAgain()).containsExactly(new SeenAgain(1001, ProductStatus.PRICE_PENDING));
+	}
+
+	@Test
+	void knownPriceReplacesWaitingForTheFeed() {
+		state.activeWithoutPrice(1, 10);
+
+		ImportPlan plan = plan(row(1, "E001", "S", 100));
+
+		NewVersion v = single(plan.newVersions());
+		assertThat(v.status()).isEqualTo(ProductStatus.OK);
+		assertThat(v.replacesProductId()).isEqualTo(1001L);
+	}
+
+	@Test
+	void unknownPriceInConflictedGroupIsReviewNotWaiting() {
+		state.active(1, 20, 100).active(2, 10, 100);
+
+		ImportPlan plan = plan(row(1, "E001", "S", 100), row(2, "E001", "S", 100), row(3, "E001", "S", null));
+
+		assertThat(single(plan.newVersions()).status()).isEqualTo(ProductStatus.REVIEW);
+	}
+
+	// ---- items to look up in the feed ----
+
+	@Test
+	void feedLookupCoversNewItemsPriceChangesAndUnknownPricesOnly() {
+		state.active(1, 10, 100).active(2, 10, 100).active(3, 10, 100).active(4, 10, 100);
+
+		ImportPlan plan = plan(row(1, "E001", "S", 100), row(2, "E001", "S", 90), row(3, "E001", "S", null),
+				row(5, "E001", "S", 50), row(4, "E001", "S", 100));
+
+		assertThat(plan.feedItemIds()).containsExactly(2L, 3L, 5L);
+	}
+
+	@Test
+	void feedLookupRetriesItemsStillWaitingForThePrice() {
+		state.activeWithoutPrice(1, 10);
+
+		ImportPlan plan = plan(row(1, "E001", "S", null));
+
+		assertThat(plan.feedItemIds()).containsExactly(1L);
 	}
 
 	@Test
@@ -198,9 +247,9 @@ class ImportPlannerTest {
 	}
 
 	private static ImportRow row(long itemId, String label, String groupName, Integer price, String name, String shop) {
-		return new ImportRow(2, itemId, 9, shop, ShopType.MALL, ProductName.of(name),
+		return new ImportRow(2, itemId, 9, shop, ProductName.of(name),
 				price == null ? null : BigDecimal.valueOf(price), null, null, null,
-				"https://shopee.co.th/product/9/" + itemId, null, null, label, groupName,
+				"https://shopee.co.th/product/9/" + itemId, null, label, groupName,
 				GroupingMethod.ENGLISH_NAME_MATCH);
 	}
 
@@ -216,6 +265,12 @@ class ImportPlannerTest {
 
 		State active(long itemId, long typeId, int price, ProductStatus status) {
 			active.put(itemId, new ActiveVersion(1000 + itemId, itemId, typeId, BigDecimal.valueOf(price), status));
+			typeByItem.put(itemId, typeId);
+			return this;
+		}
+
+		State activeWithoutPrice(long itemId, long typeId) {
+			active.put(itemId, new ActiveVersion(1000 + itemId, itemId, typeId, null, ProductStatus.PRICE_PENDING));
 			typeByItem.put(itemId, typeId);
 			return this;
 		}

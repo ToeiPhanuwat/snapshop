@@ -9,6 +9,7 @@ import {
   markDiscontinued,
   moveProduct,
   resolveReview,
+  retryFeedSync,
 } from "@/lib/api/admin";
 import type { Result } from "@/lib/api/http";
 import type { ImportResult } from "@/types/api";
@@ -107,4 +108,13 @@ export async function discardInboxAction(_: ActionState, formData: FormData): Pr
     return failure(result);
   }
   redirect(`/admin/inbox?done=${encodeURIComponent(`ทิ้งไฟล์ ${name} แล้ว (ย้ายไป rejected/)`)}`);
+}
+
+export async function retryFeedAction(): Promise<ActionState> {
+  const result = await retryFeedSync();
+  if (!result.ok) {
+    return failure(result);
+  }
+  refresh();
+  return { ok: true, message: "เริ่มดึงจากฟีดแล้ว ผลจะขึ้นในรายการด้านล่างเมื่อเสร็จ" };
 }

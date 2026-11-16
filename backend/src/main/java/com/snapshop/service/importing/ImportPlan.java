@@ -12,18 +12,21 @@ import java.util.Objects;
  * @param newVersions versions to insert as the current one (new items, and items whose price changed)
  * @param seenAgain   current versions that stay, with their status for this round
  * @param notInLatest current versions not in this file, to be hidden
+ * @param feedItemIds items to look up in the feed afterwards, ascending
  */
 public record ImportPlan(
 		List<NewType> newTypes,
 		List<NewVersion> newVersions,
 		List<SeenAgain> seenAgain,
-		List<Long> notInLatest) {
+		List<Long> notInLatest,
+		List<Long> feedItemIds) {
 
 	public ImportPlan {
 		newTypes = List.copyOf(newTypes);
 		newVersions = List.copyOf(newVersions);
 		seenAgain = List.copyOf(seenAgain);
 		notInLatest = List.copyOf(notInLatest);
+		feedItemIds = List.copyOf(feedItemIds);
 	}
 
 	public long priceChangeCount() {
