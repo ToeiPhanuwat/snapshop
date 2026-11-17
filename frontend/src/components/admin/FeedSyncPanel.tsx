@@ -6,6 +6,7 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { formatDateTime } from "@/lib/format";
 import type { FeedSyncOutcome, FeedSyncRun } from "@/types/api";
 import { ActionMessage } from "./ActionMessage";
+import { AutoRefresh } from "./AutoRefresh";
 
 const OUTCOME: Record<FeedSyncOutcome, { label: string; tone: BadgeTone }> = {
   RUNNING: { label: "กำลังดึง", tone: "info" },
@@ -15,15 +16,21 @@ const OUTCOME: Record<FeedSyncOutcome, { label: string; tone: BadgeTone }> = {
   FAILED: { label: "ล้มเหลว", tone: "danger" },
 };
 
-/** Results of the automatic look-ups in the feed, and a button to look up again what is still missing. */
+/**
+ * Results of the automatic look-ups in the feed, and a button to look up again what is still missing. The button
+ * stays disabled while any look-up runs (started by an import or by the button); the page reloads its data every
+ * minute meanwhile, so the button comes back once the run is over.
+ */
 export function FeedSyncPanel({ runs }: { runs: FeedSyncRun[] }) {
   const [state, action, pending] = useActionState(retryFeedAction, null);
+  const running = runs.some((run) => run.outcome === "RUNNING");
   return (
     <div className="space-y-3">
+      <AutoRefresh active={running} />
       <form action={action} className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || running}
           className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
         >
           {pending ? "กำลังส่งคำขอ…" : "ดึงรายการที่ค้างจากฟีด"}
