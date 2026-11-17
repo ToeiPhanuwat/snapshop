@@ -1,9 +1,11 @@
 package com.snapshop.service.feed;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.snapshop.config.FeedProperties;
 import com.snapshop.repository.FeedSyncRunRepository;
@@ -19,9 +21,11 @@ class FeedSyncListenerTest {
 
 	@Test
 	void startsTheLookupAfterAnImportWhenTheFeedIsConfigured() {
+		when(sync.start(request)).thenReturn(42L);
+
 		new FeedSyncListener(new FeedProperties("https://feed.example/x", null, null), sync, runs).afterImport(request);
 
-		verify(sync).syncAsync(request);
+		verify(sync).runAsync(42L, request);
 	}
 
 	@Test
@@ -30,7 +34,8 @@ class FeedSyncListenerTest {
 		new FeedSyncListener(new FeedProperties("https://feed.example/x", null, null), sync, runs)
 				.afterImport(new FeedRequest(1L, Set.of(), Set.of()));
 
-		verify(sync, never()).syncAsync(any());
+		verify(sync, never()).start(any());
+		verify(sync, never()).runAsync(anyLong(), any());
 	}
 
 	@Test

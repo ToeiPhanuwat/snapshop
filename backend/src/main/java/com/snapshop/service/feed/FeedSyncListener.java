@@ -26,7 +26,7 @@ class FeedSyncListener {
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	void afterImport(FeedRequest request) {
 		if (properties.enabled() && !request.itemIds().isEmpty()) {
-			sync.syncAsync(request);
+			sync.runAsync(sync.start(request), request);
 		}
 	}
 
