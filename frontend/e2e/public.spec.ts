@@ -11,6 +11,8 @@ test("the home page lists only the products that at least two shops sell", async
 
 test("the search narrows the list and says when nothing matches", async ({ page }) => {
   await page.goto("/");
+  // The search box of the static shell is swapped for the streamed one; typing before that would be lost.
+  await expect(page.getByRole("heading", { name: SERUM })).toBeVisible();
   const search = page.getByRole("search");
   await search.getByRole("searchbox").fill("Vitamin C");
   await search.getByRole("button", { name: "ค้นหา" }).click();
