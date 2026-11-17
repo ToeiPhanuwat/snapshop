@@ -24,6 +24,12 @@ async function submit() {
 }
 
 describe("ImportForm", () => {
+  test("offers to import before anything was sent", () => {
+    render(<ImportForm />);
+    expect(screen.getByRole("button")).toHaveTextContent(/^นำเข้า$/);
+    expect(screen.getByRole("button")).toBeEnabled();
+  });
+
   test("sends the chosen file and keeps the button disabled until the import is done", async () => {
     const answer = deferred<ActionState>();
     importFile.mockReturnValue(answer.promise);

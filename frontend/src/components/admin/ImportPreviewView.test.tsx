@@ -69,9 +69,9 @@ describe("ImportPreviewView", () => {
     expect(screen.getByText("Toner 100ml")).toBeInTheDocument();
   });
 
-  test("opens short sections and keeps long or empty ones closed", () => {
+  test("opens sections of up to 20 lines and keeps longer or empty ones closed", () => {
     const many = Array.from({ length: 21 }, (_, i) => ({ itemId: i, name: `item ${i}` }));
-    render(<ImportPreviewView preview={importPreview({ toHide: many, toReview: many.slice(0, 2) })} />);
+    render(<ImportPreviewView preview={importPreview({ toHide: many, toReview: many.slice(0, 20) })} />);
     const section = (title: RegExp) => screen.getByText(title, { selector: "summary" }).closest("details");
     expect(section(/^จะถูกซ่อน/)).not.toHaveAttribute("open");
     expect(section(/^จะรอตรวจ/)).toHaveAttribute("open");

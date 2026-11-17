@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { retryFeedAction, type ActionState } from "@/app/admin/actions";
 import { deferred, feedRun } from "@/test/fixtures";
+import type { FeedSyncOutcome } from "@/types/api";
 import { FeedSyncPanel } from "./FeedSyncPanel";
 
 vi.mock("@/app/admin/actions", () => ({ retryFeedAction: vi.fn() }));
@@ -41,6 +42,17 @@ describe("FeedSyncPanel", () => {
     expect(within(row).getByText("40")).toBeInTheDocument();
     expect(within(row).getByText("12")).toBeInTheDocument();
     expect(within(row).getByText("โดน 429")).toBeInTheDocument();
+  });
+
+  test.each<[FeedSyncOutcome, string]>([
+    ["RUNNING", "กำลังดึง"],
+    ["DONE", "เสร็จ"],
+    ["INCOMPLETE", "ไม่ครบ"],
+    ["RATE_LIMITED", "ถูกจำกัด (429)"],
+    ["FAILED", "ล้มเหลว"],
+  ])("names the outcome %s", (outcome, label) => {
+    render(<FeedSyncPanel runs={[feedRun({ outcome })]} />);
+    expect(within(screen.getAllByRole("row")[1]).getByText(label)).toBeInTheDocument();
   });
 
   test("lists only the five latest runs", () => {

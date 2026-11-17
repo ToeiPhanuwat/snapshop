@@ -42,6 +42,7 @@ describe("AdminProductTable", () => {
       "href",
       "/admin/products?typeCode=PT000007",
     );
+    expect(within(item).getByText(/^กลุ่ม/)).toHaveTextContent(/^กลุ่ม PT000007 Sunscreen 30ml · เปิดหน้าสินค้า$/);
     const shop = within(item).getByRole("link", { name: "เปิดหน้าสินค้า" });
     expect(shop).toHaveAttribute("href", "https://shopee.co.th/product/1/1001");
     expect(shop).toHaveAttribute("target", "_blank");

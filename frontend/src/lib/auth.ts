@@ -4,6 +4,7 @@
 /** Constant-time string comparison, so response time does not reveal how much of a guess was right. */
 function sameText(a: string, b: string): boolean {
   let diff = a.length ^ b.length;
+  // Stryker disable next-line EqualityOperator,MethodExpression: equivalent — an extra step reads 0 on both sides, and a shorter loop only runs when the lengths already differ (diff ≠ 0); the full length is for timing, which a test cannot see
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
   }
@@ -25,6 +26,7 @@ export function basicAuthHeader(): string {
 }
 
 export function isAdminAuthorization(header: string | null): boolean {
+  // Stryker disable next-line StringLiteral: equivalent — any header without the scheme also fails sameText below; this is a shortcut
   if (!header?.startsWith("Basic ")) {
     return false;
   }
