@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Looks items up in the feed and stores what it says. Download first (slow, no lock, no transaction), then one
@@ -35,14 +37,27 @@ public class FeedSyncService {
 		this.products = products;
 	}
 
-	/** Same as {@link #sync} but on the single feed thread, so the caller does not wait for the download. */
+	/**
+	 * Stores the look-up as RUNNING and commits that at once, before the caller answers, so a page that reloads
+	 * right away already sees it. Runs in its own transaction because after an import it is called once the import
+	 * transaction has committed, when an ordinary write would not be committed any more.
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public long start(FeedRequest request) {
+		return runs.start(request.batchId(), request.itemIds().size(), Instant.now());
+	}
+
+	/** Does a look-up already {@linkplain #start started} on the single feed thread; the caller does not wait. */
 	@Async("feedSyncExecutor")
-	public void syncAsync(FeedRequest request) {
-		sync(request);
+	public void runAsync(long runId, FeedRequest request) {
+		run(runId, request);
 	}
 
 	public FeedSyncRunResponse sync(FeedRequest request) {
-		long runId = runs.start(request.batchId(), request.itemIds().size(), Instant.now());
+		return run(start(request), request);
+	}
+
+	private FeedSyncRunResponse run(long runId, FeedRequest request) {
 		try {
 			FeedResult result = client.fetch(request.itemIds());
 			applier.apply(request, result.found().values());

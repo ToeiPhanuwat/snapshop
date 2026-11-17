@@ -33,7 +33,10 @@ public class AdminFeedController {
 		return runs.recent();
 	}
 
-	/** Looks up again the items still waiting for a price or never looked up; the answer comes later in the list. */
+	/**
+	 * Looks up again the items still waiting for a price or never looked up. The look-up is already stored as RUNNING
+	 * when this answers; its result comes later in the list.
+	 */
 	@PostMapping
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	public void retry() {
@@ -41,7 +44,7 @@ public class AdminFeedController {
 			throw new BusinessRuleException("ยังไม่ได้ตั้งค่า FEED_URL");
 		}
 		FeedRequest request = sync.pendingRequest();
-		sync.syncAsync(request);
+		sync.runAsync(sync.start(request), request);
 	}
 
 }
