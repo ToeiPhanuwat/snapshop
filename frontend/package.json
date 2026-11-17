@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e:up": "docker compose -f ../docker-compose.yml --env-file ../.env.test -p snapshop-e2e --profile app up -d --build",
+    "e2e:down": "docker compose -f ../docker-compose.yml --env-file ../.env.test -p snapshop-e2e --profile app down -v",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -17,6 +20,7 @@
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",

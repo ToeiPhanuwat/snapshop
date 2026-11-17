@@ -21,3 +21,11 @@ frontend/next-env.d.ts
 
 # files waiting for import (placed by AI, imported by admin)
 inbox/
+
+# end-to-end test stack: local values and outputs
+.env.test
+frontend/e2e/.inbox/
+frontend/test-results/
+frontend/playwright-report/
+frontend/reports/
+frontend/.stryker-tmp/
