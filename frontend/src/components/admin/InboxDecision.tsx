@@ -8,6 +8,8 @@ import { ActionMessage } from "./ActionMessage";
 export function InboxDecision({ name, canImport }: { name: string; canImport: boolean }) {
   const [importState, importFile, importing] = useActionState(importInboxAction, null);
   const [discardState, discard, discarding] = useActionState(discardInboxAction, null);
+  // One decision at a time: while either runs, neither button can be pressed.
+  const busy = importing || discarding;
   const fileName = <input type="hidden" name="name" value={name} />;
 
   return (
@@ -17,7 +19,7 @@ export function InboxDecision({ name, canImport }: { name: string; canImport: bo
           <form action={importFile}>
             {fileName}
             <button
-              disabled={importing}
+              disabled={busy}
               className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
             >
               {importing ? "กำลังนำเข้า…" : "นำเข้าไฟล์นี้"}
@@ -34,7 +36,7 @@ export function InboxDecision({ name, canImport }: { name: string; canImport: bo
         >
           {fileName}
           <button
-            disabled={discarding}
+            disabled={busy}
             className="rounded-lg px-4 py-2 text-sm text-rose-700 ring-1 ring-inset ring-rose-300 disabled:opacity-50"
           >
             ทิ้งไฟล์

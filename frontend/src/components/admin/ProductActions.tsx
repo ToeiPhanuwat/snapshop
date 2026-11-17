@@ -12,6 +12,8 @@ export function ProductActions({ product }: { product: AdminProduct }) {
   const [resolveState, resolve, resolving] = useActionState(resolveAction, null);
   const [moveState, move, moving] = useActionState(moveAction, null);
   const [deactivateState, deactivate, deactivating] = useActionState(deactivateAction, null);
+  // One decision at a time: while any runs, none of the buttons can be pressed.
+  const busy = resolving || moving || deactivating;
   const itemId = <input type="hidden" name="itemId" value={product.itemId} />;
 
   return (
@@ -20,7 +22,7 @@ export function ProductActions({ product }: { product: AdminProduct }) {
         {product.status === "REVIEW" ? (
           <form action={resolve}>
             {itemId}
-            <button disabled={resolving} className={`${smallButton} ring-emerald-300 text-emerald-700`}>
+            <button disabled={busy} className={`${smallButton} ring-emerald-300 text-emerald-700`}>
               ตรวจแล้ว
             </button>
           </form>
@@ -33,7 +35,7 @@ export function ProductActions({ product }: { product: AdminProduct }) {
             aria-label="ย้ายไปกลุ่ม"
             className="w-24 rounded-md border border-zinc-300 px-2 py-1 text-xs"
           />
-          <button disabled={moving} className={`${smallButton} ring-zinc-300`}>
+          <button disabled={busy} className={`${smallButton} ring-zinc-300`}>
             ย้ายกลุ่ม
           </button>
         </form>
@@ -46,7 +48,7 @@ export function ProductActions({ product }: { product: AdminProduct }) {
           }}
         >
           {itemId}
-          <button disabled={deactivating} className={`${smallButton} ring-rose-300 text-rose-700`}>
+          <button disabled={busy} className={`${smallButton} ring-rose-300 text-rose-700`}>
             เลิกขาย
           </button>
         </form>
