@@ -21,5 +21,9 @@ commit บน feature branch เท่านั้น ไม่ commit/push เ�
 - CRAP: `python -I tools/crap.py target/site/jacoco/jacoco.xml` (ใน backend, หลัง verify)
 - PIT: `./mvnw test-compile org.pitest:pitest-maven:mutationCoverage` (ใน backend)
 - Frontend: `cd frontend && npm run lint && npm run build` — Next.js 16 มี breaking changes อ่าน `frontend/AGENTS.md` และ `node_modules/next/dist/docs` ก่อนเขียน
+- เทสต์ frontend: `npm test` (Vitest ชั้น 1–3), `npm run mutation` (Stryker), E2E: `npm run e2e:down && npm run e2e:up && npm run e2e`
+  (ต้องมี `.env.test` ที่ root และปิด stack dev ก่อน — ถามผู้ใช้ก่อนปิด; รายละเอียดใน README "เทสต์ frontend")
+- `npm install` บน Windows อาจทำให้ `package-lock.json` ขาดแพ็กเกจของ Linux (`npm ci` ใน Docker จะล้ม) — ถ้าเกิด
+  ให้รัน `npm install --package-lock-only` ใน container `node:24-alpine` เพื่อเติมรายการที่ขาด
 - รัน jar บนเครื่องนี้นอก Docker ต้องเพิ่ม `-Djdk.net.unixdomain.tmpdir=<โฟลเดอร์ที่เขียนได้>` ไม่เช่นนั้น Tomcat เปิด loopback ไม่ได้
 - ทั้งระบบ: `docker compose --profile app up -d --build`
