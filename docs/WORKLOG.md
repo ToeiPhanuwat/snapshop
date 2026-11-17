@@ -139,3 +139,48 @@
 - Frontend: `FeedSyncPanel` disable ปุ่มเมื่อมีรอบ `RUNNING` หรือกำลังส่งคำขอ; `AutoRefresh` เรียก `router.refresh()` ทุก 60 วินาทีเฉพาะตอนมีรอบ `RUNNING`
 - ตรวจในเบราว์เซอร์บน DB ชั่วคราว: แถว `RUNNING` → ปุ่ม disable; เปลี่ยนเป็น `DONE` ใน DB โดยไม่โหลดหน้า → ราว 60 วินาทีปุ่มกลับมากดได้เอง และไม่ถามซ้ำอีก. ระหว่างตรวจพบว่า `next start` ใช้กับ build แบบ standalone ไม่ได้ (คอมโพเนนต์ client ไม่ hydrate) ต้องรัน `node .next/standalone/server.js` (คัดลอก `.next/static` ไปด้วย) — Docker ใช้แบบนี้อยู่แล้ว
 - กฎใหม่ของผู้ใช้ (CLAUDE.md ส่วนตัว): ปุ่มสั่งงานต้อง disable จนงานเสร็จ; เจอเรื่องต้องตัดสินใจให้ถามพร้อมทุกแนวทางและคำแนะนำ ห้ามเดา
+
+## 2026-11-17 — เทสต์ frontend ครบ 4 ชั้น (branch `test/frontend-tests`)
+- เหตุ: frontend ยังไม่มีเทสต์เลย ผู้ใช้อนุมัติแผน 4 ชั้น โดยวางไฟล์เทสต์คู่กับไฟล์ต้นทาง, เก็บ `.env.test` ไว้บนเครื่องไม่ commit (commit แค่ `.env.test.example`), ให้ E2E ใช้พอร์ตเดิมโดยปิด stack dev ก่อน, แก้ปัญหาปุ่มที่กดซ้อนกันได้แบบ TDD และเพิ่ม Stryker
+- pull `main` (ได้ PR #5 มาด้วย) แล้วแตก branch `test/frontend-tests`
+- **ชั้น 1 (bfa579f)** ตั้ง Vitest + Testing Library ตามคู่มือของ Next 16
+  - alias `server-only` ไปที่ stub ว่าง เพราะของจริง throw เมื่อถูก import นอก Server Component
+  - Vitest 5 ต้องใช้ `@types/node` ≥22 ผู้ใช้เลือกอัปเป็น ^24 ให้ตรงกับ Node 24 ที่รันจริง
+  - เทสต์ format (เวลา Bangkok), `query`, `backendUrl`, `isAdminAuthorization` และ proxy
+- **ชั้น 2 (a36f18a)** เทสต์คอมโพเนนต์โดยหาองค์ประกอบด้วย role/ข้อความ และ mock เฉพาะ Server Actions กับ router
+  - ใช้ promise ที่เทสต์ resolve เองเพื่อจับสถานะ pending
+  - ข้อจำกัดของ jsdom: ไฟล์ที่เลือกไม่นับว่ากรอก `required` แล้ว และไม่ถูกใส่ใน FormData เทสต์จึงส่ง submit event เอง ส่วนการอัปโหลดจริงให้ E2E ตรวจ
+- **ปุ่มกดซ้อนกันได้ (9c225dd)**: `InboxDecision` และ `ProductActions` disable เฉพาะปุ่มของ action ที่กำลังทำงาน ระหว่างนำเข้ายังกดทิ้งไฟล์ได้ ซึ่งขัดกฎ "ปุ่มต้อง disable"
+  - เขียนเทสต์ก่อน: ล้มที่ `toBeDisabled` ตามที่คาด
+  - แก้ด้วยธง `busy` เดียวต่อคอมโพเนนต์ แล้วเทสต์ผ่าน
+  - ระหว่างเทสต์ยังล้ม มีอีกเทสต์หนึ่งล้มตามไปด้วย สาเหตุคือ React 19 รวม transition ของ async action ทั้งหมดเข้าด้วยกัน promise ที่ค้างอยู่จากเทสต์ที่ล้มก่อนหน้าจึงทำให้เทสต์ถัดไปค้างตาม เมื่อเทสต์ผ่านครบปัญหานี้ก็หายไป
+- **ชั้น 3 (96abfec)**
+  - Server Actions: mock `@/lib/api/admin`, `refresh` และ `redirect` (ให้ throw เหมือนของจริง)
+  - client ที่เรียก backend: mock `fetch` และ `next/headers` แล้วตรวจว่าประตู admin ปฏิเสธก่อนที่จะเรียก backend
+- **E2E (7981456, c1f67cc)** ใช้ compose project `snapshop-e2e` ซึ่งมี DB volume ของตัวเองและ `FEED_URL` ว่าง
+  - mount ของ inbox อ่านจาก `INBOX_DIR` (ค่า default `./inbox` stack dev จึงไม่เปลี่ยน) ส่วน stack ทดสอบใช้ `frontend/e2e/.inbox`
+  - ข้อมูลทดสอบเป็นไฟล์ 7 แถวที่เขียนเอง (3 กลุ่ม, ราคาย่อ 1 แถว, 1 รายการไม่มีคู่)
+  - ปัญหา lock file: `npm install` บน Windows ทำให้ `package-lock.json` ขาด `@emnapi/runtime` และ `npm ci` ใน image Linux ล้ม แก้โดยรัน `npm install --package-lock-only` ใน `node:24-alpine` ซึ่งเติมแค่ 3 รายการที่ขาด
+  - ปิด stack dev ตามที่ผู้ใช้สั่ง: `next dev` บนพอร์ต 3000, backend (java) บนพอร์ต 8080 และ container `snapshop-db-1` (stop เท่านั้น ไม่ลบ volume)
+  - รอบแรกล้ม 2 ข้อ ทั้งสองข้อเป็นความผิดของเทสต์ ไม่ใช่ของแอป:
+    - ช่องค้นหาของหน้าสินค้า admin ไม่ค้นด้วย item id
+    - Next (cacheComponents) เก็บหน้าพรีวิวที่ออกมาแล้วไว้ใน DOM แบบซ่อน แก้โดยใช้ `getByRole` ที่ข้ามองค์ประกอบที่ซ่อน
+  - ผลรอบสุดท้าย: 17/17 ผ่านบน stack ที่เริ่มจากข้อมูลว่าง และ `inbox/` จริงไม่เปลี่ยน
+- ข้อสังเกตเรื่องพฤติกรรมเดิมของแอป (ไม่ได้แก้): ในหน้าสินค้า admin เมื่อกด "เลิกขาย" แล้วรายการจะหายจากรายการทันทีหลัง `refresh()` ข้อความ "บันทึกว่าเลิกขายแล้ว" จึงหายไปพร้อมกัน ผู้ใช้เห็นเพียงว่าแถวหายไป
+- **Stryker (4bc1ac5)**
+  - รอบแรกได้ 90.28%: รอด 48 ตัว และ `SearchForm` ไม่มีเทสต์ครอบ
+  - เพิ่มเทสต์ที่ผู้ใช้จะเห็นผลจริง: label ของ outcome/สถานะ, ปุ่มนำเข้าตอนว่าง, ขอบเขต 20 บรรทัดของพรีวิว, ช่องว่างในบรรทัดกลุ่ม และ `SearchForm`
+  - ignorer `styling` ข้าม mutant ที่เปลี่ยนแค่ class ของ Tailwind หรือ tone ของ badge
+  - ปิด 3 mutant ใน `auth.ts` ที่ให้ผลเหมือนโค้ดเดิม (equivalent) พร้อมเหตุผล
+  - รอบสองได้ 100%: killed 462, timeout 12, survived 0, no coverage 0, ignored 36 ใช้เวลารอบละราว 30 นาที เพราะต้องสร้าง jsdom ใหม่ทุกไฟล์
+  - mutant ที่แก้ตัวเลือกของ Intl เป็นค่าว่างทำให้ module throw ตอนโหลด (RuntimeError/Timeout) จึงนับว่าจับได้แล้ว
+- **ตรวจรอบสุดท้าย**
+  - ผ่านหมด: `npm run lint`, `npm run build`, `npm test` (148) และ E2E 17/17 สองรอบ แต่ละรอบเริ่มจากฐานข้อมูลใหม่ (`import_batch` เริ่มที่ 1 ทุกรอบ)
+  - ระหว่างตรวจเจอ 3 เรื่อง:
+    - **global-setup** เดิมรอแค่หน้าแรก แต่หน้าแรกเป็น Partial Prerender ซึ่งตอบ 200 จาก static shell ทั้งที่ backend ยังไม่ขึ้น seed จึงล้ม แก้ให้รอ `/api/product-types` ของ backend ก่อน
+    - **เทสต์ค้นหา** ฟอร์มค้นหาอยู่ใน Suspense ฟอร์มจาก static shell จะถูกแทนด้วยฟอร์มที่ stream มาทีหลัง ข้อความที่พิมพ์ก่อนการแทนที่จึงหาย แก้เทสต์ให้รอรายการโหลดก่อนแล้วค่อยพิมพ์ (พฤติกรรมของแอปไม่ได้แก้ ดูข้อสังเกตด้านล่าง)
+    - **lint** ไปตรวจไฟล์ trace viewer ใน `playwright-report/` ด้วย เพิ่มโฟลเดอร์ที่เครื่องมือเทสต์สร้างไว้ใน `globalIgnores` ของ ESLint
+  - เคยล้มหนึ่งรอบเพราะคำสั่งของผมเอง: ผมส่งผล `e2e:down` เข้า `tail -0` คาดว่า `tail -0` ปิดก่อน npm เขียนเสร็จ `down` จึงถูกตัดก่อนลบ volume และข้อมูลเก่ายังอยู่ เมื่อรันโดยไม่ตัด output ผลผ่านทุกรอบ
+  - `docker compose config` ของ stack dev ยัง mount `./inbox` เหมือนเดิม และ `inbox/` จริงไม่เปลี่ยน (แก้ไขล่าสุด 2026-11-13)
+- ข้อสังเกตเรื่องพฤติกรรมเดิมของแอป (ไม่ได้แก้): ถ้าผู้ใช้พิมพ์ในช่องค้นหาหน้าแรกเร็วมากก่อนที่ฟอร์มที่ stream มาจะแทนฟอร์มของ static shell ข้อความที่พิมพ์จะหาย
+- **ยังไม่ได้ทำ**: ยังไม่ได้เปิด stack dev กลับ (`next dev`, backend นอก Docker, container `snapshop-db-1`) และยังไม่ได้ push

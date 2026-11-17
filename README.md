@@ -111,3 +111,35 @@ Mutation test กฎนำเข้าและแกน feed (`FeedPlanner`, `F
 ```bash
 cd frontend && npm run lint && npm run build
 ```
+
+### เทสต์ frontend
+
+ไฟล์เทสต์วางคู่กับไฟล์ต้นทาง (`X.tsx` อยู่ข้าง `X.test.tsx`) แบ่งเป็น 4 ชั้น:
+
+| ชั้น | สิ่งที่เทสต์ | คำสั่ง |
+|---|---|---|
+| 1. ฟังก์ชันล้วน | `src/lib/**`, `src/proxy.ts` | `npm test` |
+| 2. คอมโพเนนต์ | `src/components/**` (React Testing Library บน jsdom) | `npm test` |
+| 3. Server Actions และ client ที่เรียก backend | `src/app/admin/actions.ts`, `src/lib/api/**` | `npm test` |
+| 4. End to end | `e2e/*.spec.ts` (Playwright กับระบบจริงใน Docker) | `npm run e2e` |
+
+```bash
+cd frontend && npm test
+```
+ชั้น 1–3 (Vitest) ไม่ต้องใช้ Docker หรือ backend ส่วน `npm run test:watch` จะรันซ้ำทุกครั้งที่แก้ไฟล์
+
+```bash
+cd frontend && npm run mutation
+```
+Mutation test ด้วย Stryker (เทียบได้กับ PIT ของ backend) ใช้เวลาราว 10–20 นาที รายงานอยู่ที่ `frontend/reports/mutation/index.html`
+
+**E2E** รันบน compose project แยกชื่อ `snapshop-e2e` ซึ่งมีฐานข้อมูลของตัวเอง
+1. คัดลอก `.env.test.example` เป็น `.env.test` ที่ root แล้วเปลี่ยนรหัสผ่าน ห้ามใช้รหัส admin จริงหรือลิงก์ feed จริง และ `.env.test` ไม่ถูก commit
+2. ปิด stack dev ก่อน เพราะใช้พอร์ต 3000/8080/5432 เหมือนกัน (`docker compose stop`, `next dev` และ backend ที่รันนอก Docker)
+3. รันตามลำดับ:
+   ```bash
+   cd frontend && npm run e2e:down && npm run e2e:up && npm run e2e
+   ```
+   `e2e:down` ลบฐานข้อมูลของ stack ทดสอบเพื่อให้เริ่มจากข้อมูลว่างทุกครั้ง จากนั้นเทสต์จะนำเข้าไฟล์ `e2e/fixtures/e2e-import.csv` เอง
+   - โฟลเดอร์ inbox ของ stack ทดสอบมาจาก `INBOX_DIR` (`frontend/e2e/.inbox`) จึงไม่แตะ `inbox/` จริง
+   - ถ้าครั้งก่อนเหลือไฟล์ค้างอยู่ ให้ลบ `frontend/e2e/.inbox` ทิ้งก่อนรัน
