@@ -23,7 +23,11 @@ public class FeedClient {
 
 	public FeedClient(FeedProperties properties) {
 		this.properties = properties;
-		this.http = HttpClient.newBuilder().connectTimeout(properties.connectTimeout()).build();
+		// The feed link answers 302 to where the file really is; NORMAL follows it, but never from https to http.
+		this.http = HttpClient.newBuilder()
+				.connectTimeout(properties.connectTimeout())
+				.followRedirects(HttpClient.Redirect.NORMAL)
+				.build();
 	}
 
 	public FeedResult fetch(Set<Long> itemIds) {

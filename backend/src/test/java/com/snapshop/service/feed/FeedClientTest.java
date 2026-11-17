@@ -34,6 +34,23 @@ class FeedClientTest {
 	}
 
 	@Test
+	void followsTheRedirectToWhereTheFeedFileReallyIs() throws IOException {
+		serve(200, null, FeedReaderTest.HEADER + "t,11,7,129,79,5,4.5,4.8,Official shop,Non-Preferred shop,https://cf/x\n");
+		server.createContext("/link", exchange -> {
+			exchange.getResponseHeaders().add("Location", "/feed?signature=abc");
+			exchange.sendResponseHeaders(302, -1);
+			exchange.close();
+		});
+
+		FeedResult result = new FeedClient(new FeedProperties(
+				"http://localhost:" + server.getAddress().getPort() + "/link", null, null)).fetch(Set.of(11L));
+
+		assertThat(result.message()).doesNotContain("302");
+		assertThat(result.outcome()).isEqualTo(FeedResult.Outcome.DONE);
+		assertThat(result.found()).containsOnlyKeys(11L);
+	}
+
+	@Test
 	void saysHowManyItemsWereFoundWhenTheFeedEndsEarly() throws IOException {
 		serve(200, null, FeedReaderTest.HEADER + "t,11,7,1,1,1,1,1,a,b,c\n");
 
