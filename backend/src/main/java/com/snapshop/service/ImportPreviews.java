@@ -9,6 +9,7 @@ import com.snapshop.model.enums.ProductStatus;
 import com.snapshop.service.importing.ImportPlan;
 import com.snapshop.service.importing.ImportPlan.NewType;
 import com.snapshop.service.importing.ImportPlan.NewVersion;
+import com.snapshop.service.importing.ProductName;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ final class ImportPreviews {
 	}
 
 	private static ItemLine line(MarketplaceProduct p) {
-		return new ItemLine(p.getItemId(), p.getNameRaw());
+		return new ItemLine(p.getItemId(), new ProductName(p.getNamePrefix(), p.getNameCore()).raw());
 	}
 
 }

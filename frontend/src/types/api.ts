@@ -2,7 +2,6 @@
 
 export type ShopType = "MALL" | "PREFERRED" | "REGULAR";
 export type ProductStatus = "OK" | "NOT_IN_LATEST" | "TEST" | "OUT_OF_STOCK" | "REVIEW" | "PRICE_PENDING";
-export type GroupingMethod = "ENGLISH_NAME_MATCH" | "FORMULA_RULE" | "NO_MATCH";
 export type ProductSort = "PRICE_ASC" | "PRICE_DESC" | "NAME";
 
 export interface Page<T> {
@@ -59,7 +58,6 @@ export interface AdminProduct {
 export interface AdminProductType {
   code: string;
   name: string;
-  groupingMethod: GroupingMethod;
   activeCount: number;
   visibleCount: number;
   onUserSite: boolean;

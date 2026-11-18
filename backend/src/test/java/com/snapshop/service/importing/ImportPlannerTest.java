@@ -2,7 +2,6 @@ package com.snapshop.service.importing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.snapshop.model.enums.GroupingMethod;
 import com.snapshop.model.enums.ProductStatus;
 import com.snapshop.service.importing.ImportPlan.NewType;
 import com.snapshop.service.importing.ImportPlan.NewVersion;
@@ -27,7 +26,7 @@ class ImportPlannerTest {
 		ImportPlan plan = plan(row(1, "E001", "Dr.PONG Serum", 100), row(2, "E001", "Dr.PONG Serum", 120));
 
 		assertThat(plan.newTypes()).containsExactly(
-				new NewType("dr pong serum", "Dr.PONG Serum", GroupingMethod.ENGLISH_NAME_MATCH));
+				new NewType("dr pong serum", "Dr.PONG Serum"));
 		assertThat(plan.newItemCount()).isEqualTo(2);
 		assertThat(plan.priceChangeCount()).isZero();
 		assertThat(plan.newVersions()).extracting(NewVersion::type)
@@ -247,10 +246,9 @@ class ImportPlannerTest {
 	}
 
 	private static ImportRow row(long itemId, String label, String groupName, Integer price, String name, String shop) {
-		return new ImportRow(2, itemId, 9, shop, ProductName.of(name),
+		return new ImportRow(2, itemId, 9, shop, new ProductName("", name),
 				price == null ? null : BigDecimal.valueOf(price), null, null, null,
-				"https://shopee.co.th/product/9/" + itemId, null, label, groupName,
-				GroupingMethod.ENGLISH_NAME_MATCH);
+				"https://shopee.co.th/product/9/" + itemId, null, label, groupName, null);
 	}
 
 	/** Existing database state for one category; product id = 1000 + item id. */

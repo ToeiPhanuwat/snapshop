@@ -38,14 +38,14 @@ class AdminImportControllerTest {
 	void importsRealFile() throws Exception {
 		upload(TestCsv.fixture())
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.rowCount").value(192))
-				.andExpect(jsonPath("$.insertedCount").value(192))
-				.andExpect(jsonPath("$.newTypeCount").value(122))
+				.andExpect(jsonPath("$.rowCount").value(431))
+				.andExpect(jsonPath("$.insertedCount").value(431))
+				.andExpect(jsonPath("$.newTypeCount").value(205))
 				.andExpect(jsonPath("$.priceChangedCount").value(0));
 
 		assertThat(statusCounts()).containsExactlyInAnyOrderEntriesOf(
-				Map.of("OK", 187L, "PRICE_PENDING", 3L, "TEST", 1L, "OUT_OF_STOCK", 1L));
-		assertThat(count("SELECT count(*) FROM marketplace_product WHERE name_prefix <> ''")).isEqualTo(95);
+				Map.of("OK", 398L, "PRICE_PENDING", 33L));
+		assertThat(count("SELECT count(*) FROM marketplace_product WHERE name_prefix <> ''")).isEqualTo(281);
 	}
 
 	@Test
@@ -56,12 +56,12 @@ class AdminImportControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.insertedCount").value(0))
 				.andExpect(jsonPath("$.priceChangedCount").value(0))
-				.andExpect(jsonPath("$.unchangedCount").value(192))
+				.andExpect(jsonPath("$.unchangedCount").value(431))
 				.andExpect(jsonPath("$.notInLatestCount").value(0))
 				.andExpect(jsonPath("$.newTypeCount").value(0));
 
-		assertThat(count("SELECT count(*) FROM marketplace_product")).isEqualTo(192);
-		assertThat(count("SELECT count(*) FROM product_type")).isEqualTo(122);
+		assertThat(count("SELECT count(*) FROM marketplace_product")).isEqualTo(431);
+		assertThat(count("SELECT count(*) FROM product_type")).isEqualTo(205);
 	}
 
 	@Test

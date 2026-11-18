@@ -1,6 +1,5 @@
 package com.snapshop.dto.response;
 
-import com.snapshop.model.enums.GroupingMethod;
 import java.time.Instant;
 
 /**
@@ -11,7 +10,6 @@ import java.time.Instant;
 public record AdminProductTypeResponse(
 		String code,
 		String name,
-		GroupingMethod groupingMethod,
 		int activeCount,
 		int visibleCount,
 		boolean onUserSite,

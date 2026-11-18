@@ -133,7 +133,7 @@ public class ImportService {
 
 		void apply(ImportPlan plan) {
 			plan.newTypes().forEach(t -> createdTypeIds.put(t.normName(),
-					types.save(new ProductType(category, t.name(), t.normName(), t.groupingMethod(), now)).getId()));
+					types.save(new ProductType(category, t.name(), t.normName(), now)).getId()));
 			plan.newVersions().stream().filter(v -> v.replacesProductId() != null)
 					.forEach(v -> activeById.get(v.replacesProductId()).deactivate(DeactivationReason.PRICE_CHANGED, now));
 			products.flush();

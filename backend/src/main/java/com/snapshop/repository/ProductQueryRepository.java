@@ -10,9 +10,9 @@ import com.snapshop.dto.response.PageResponse;
 import com.snapshop.dto.response.PriceHistoryResponse;
 import com.snapshop.dto.response.ProductResponse;
 import com.snapshop.dto.response.ProductTypeSummaryResponse;
-import com.snapshop.model.enums.GroupingMethod;
 import com.snapshop.model.enums.ProductStatus;
 import com.snapshop.model.enums.ShopType;
+import com.snapshop.service.importing.ProductName;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -44,7 +44,7 @@ public class ProductQueryRepository {
 			FROM marketplace_product p JOIN product_type t ON t.product_type_id = p.product_type_id""";
 
 	private static final String ADMIN_TYPE = """
-			SELECT t.product_type_code, t.type_name, t.grouping_method, t.created_at,
+			SELECT t.product_type_code, t.type_name, t.created_at,
 			       count(p.product_id) AS active_count,
 			       count(p.product_id) FILTER (WHERE p.status = 'OK') AS visible_count,
 			       EXISTS (SELECT 1 FROM public_product pp WHERE pp.product_type_id = t.product_type_id) AS on_user_site
@@ -78,7 +78,7 @@ public class ProductQueryRepository {
 		SqlWhere where = new SqlWhere()
 				.ifPresent(r.typeCode(), "product_type_code = :typeCode", "typeCode")
 				.ifPresent(r.shopType() == null ? null : r.shopType().name(), "shop_type = :shopType", "shopType")
-				.containsText(r.q(), "name_raw", "type_name");
+				.containsText(r.q(), "name_prefix", "name_core", "type_name");
 		List<ProductResponse> items = jdbc.sql("SELECT " + PRODUCT_COLUMNS + " FROM public_product" + where.sql()
 				+ orderBy(r.sort()) + page(r.page(), r.size()))
 				.params(where.params()).query(ProductQueryRepository::product).list();
@@ -114,7 +114,7 @@ public class ProductQueryRepository {
 		SqlWhere where = new SqlWhere().always("p.active_flag = 'Y'")
 				.ifPresent(r.status() == null ? null : r.status().name(), "p.status = :status", "status")
 				.ifPresent(r.typeCode(), "t.product_type_code = :typeCode", "typeCode")
-				.containsText(r.q(), "p.name_raw", "p.shop_name", "t.type_name");
+				.containsText(r.q(), "p.name_prefix", "p.name_core", "p.shop_name", "t.type_name");
 		List<AdminProductResponse> items = jdbc.sql(ADMIN_PRODUCT + where.sql()
 				+ " ORDER BY t.type_name, p.price NULLS LAST, p.item_id" + page(r.page(), r.size()))
 				.params(where.params()).query(ProductQueryRepository::adminProduct).list();
@@ -170,14 +170,15 @@ public class ProductQueryRepository {
 	private static ProductResponse product(ResultSet rs, int i) throws SQLException {
 		String prefix = rs.getString("name_prefix");
 		String core = rs.getString("name_core");
-		return new ProductResponse(rs.getLong("item_id"), prefix + core, prefix, core, rs.getString("shop_name"),
+		return new ProductResponse(rs.getLong("item_id"), new ProductName(prefix, core).raw(), prefix, core,
+				rs.getString("shop_name"),
 				ShopType.valueOf(rs.getString("shop_type")), rs.getBigDecimal("price"), rs.getString("sold_text"),
 				link(rs), rs.getString("product_type_code"), rs.getString("type_name"), rs.getString("image_url"));
 	}
 
 	private static AdminProductResponse adminProduct(ResultSet rs, int i) throws SQLException {
 		return new AdminProductResponse(rs.getLong("product_id"), rs.getLong("item_id"),
-				rs.getString("name_prefix") + rs.getString("name_core"), rs.getString("shop_name"),
+				new ProductName(rs.getString("name_prefix"), rs.getString("name_core")).raw(), rs.getString("shop_name"),
 				ShopType.valueOf(rs.getString("shop_type")), rs.getBigDecimal("price"),
 				ProductStatus.valueOf(rs.getString("status")), rs.getString("product_type_code"),
 				rs.getString("type_name"), rs.getBoolean("on_user_site"), instant(rs, "last_seen_at"), link(rs));
@@ -185,7 +186,7 @@ public class ProductQueryRepository {
 
 	private static AdminProductTypeResponse adminType(ResultSet rs, int i) throws SQLException {
 		return new AdminProductTypeResponse(rs.getString("product_type_code"), rs.getString("type_name"),
-				GroupingMethod.valueOf(rs.getString("grouping_method")), rs.getInt("active_count"),
+				rs.getInt("active_count"),
 				rs.getInt("visible_count"), rs.getBoolean("on_user_site"), instant(rs, "created_at"));
 	}
 

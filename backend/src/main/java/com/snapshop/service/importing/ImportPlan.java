@@ -1,6 +1,5 @@
 package com.snapshop.service.importing;
 
-import com.snapshop.model.enums.GroupingMethod;
 import com.snapshop.model.enums.ProductStatus;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +36,7 @@ public record ImportPlan(
 		return newVersions.size() - priceChangeCount();
 	}
 
-	public record NewType(String normName, String name, GroupingMethod groupingMethod) {
+	public record NewType(String normName, String name) {
 	}
 
 	/** @param replacesProductId current version this one replaces because the price changed; null for a new item */

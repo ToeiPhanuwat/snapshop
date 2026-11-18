@@ -4,13 +4,6 @@ import { SearchForm } from "@/components/product/SearchForm";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
 import { getAdminTypes } from "@/lib/api/admin";
-import type { GroupingMethod } from "@/types/api";
-
-const METHOD_LABEL: Record<GroupingMethod, string> = {
-  ENGLISH_NAME_MATCH: "ชื่ออังกฤษตรงกัน",
-  FORMULA_RULE: "ตามกฎคำระบุสูตร",
-  NO_MATCH: "ไม่มีคู่",
-};
 
 export default function AdminTypesPage({ searchParams }: PageProps<"/admin/types">) {
   return (
@@ -40,7 +33,6 @@ async function Results({ searchParams }: Pick<PageProps<"/admin/types">, "search
             <tr>
               <th className="p-3">รหัส</th>
               <th className="p-3">ชื่อกลุ่ม</th>
-              <th className="p-3">วิธีจัดกลุ่ม</th>
               <th className="p-3 text-right">รายการปัจจุบัน</th>
               <th className="p-3 text-right">แสดงได้</th>
               <th className="p-3">ฝั่ง user</th>
@@ -55,7 +47,6 @@ async function Results({ searchParams }: Pick<PageProps<"/admin/types">, "search
                   </Link>
                 </td>
                 <td className="p-3">{t.name}</td>
-                <td className="whitespace-nowrap p-3 text-xs text-zinc-500">{METHOD_LABEL[t.groupingMethod]}</td>
                 <td className="p-3 text-right">{t.activeCount}</td>
                 <td className="p-3 text-right">{t.visibleCount}</td>
                 <td className="p-3">{t.onUserSite ? <Badge tone="ok">แสดง</Badge> : <Badge>ไม่แสดง</Badge>}</td>

@@ -50,8 +50,6 @@ public class MarketplaceProduct {
 	@Column(name = "name_core", nullable = false, updatable = false)
 	private String nameCore;
 
-	@Column(name = "name_raw", nullable = false, updatable = false)
-	private String nameRaw;
 
 	@Column(name = "product_type_id", nullable = false)
 	private long productTypeId;
@@ -131,7 +129,6 @@ public class MarketplaceProduct {
 		this.shopType = ShopType.REGULAR;
 		this.namePrefix = listing.namePrefix();
 		this.nameCore = listing.nameCore();
-		this.nameRaw = listing.namePrefix() + listing.nameCore();
 		this.price = listing.price();
 		this.soldText = listing.soldText();
 		this.commissionRate = listing.commissionRate();
@@ -187,7 +184,6 @@ public class MarketplaceProduct {
 		next.shopType = shopType;
 		next.namePrefix = namePrefix;
 		next.nameCore = nameCore;
-		next.nameRaw = nameRaw;
 		next.productTypeId = productTypeId;
 		next.price = newPrice;
 		next.soldText = soldText;
@@ -267,10 +263,6 @@ public class MarketplaceProduct {
 
 	public String getNameCore() {
 		return nameCore;
-	}
-
-	public String getNameRaw() {
-		return nameRaw;
 	}
 
 	public long getProductTypeId() {

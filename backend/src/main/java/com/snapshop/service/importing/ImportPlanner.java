@@ -104,7 +104,7 @@ public class ImportPlanner {
 			if (byName != null) {
 				return new Existing(byName);
 			}
-			newTypes.putIfAbsent(normName, new NewType(normName, first.groupName(), first.groupingMethod()));
+			newTypes.putIfAbsent(normName, new NewType(normName, first.groupName()));
 			return new Created(normName);
 		}
 
