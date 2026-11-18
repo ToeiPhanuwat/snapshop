@@ -33,6 +33,7 @@ async function Results({ searchParams }: Pick<PageProps<"/admin/types">, "search
             <tr>
               <th className="p-3">รหัส</th>
               <th className="p-3">ชื่อกลุ่ม</th>
+              <th className="p-3">ชนิด</th>
               <th className="p-3 text-right">รายการปัจจุบัน</th>
               <th className="p-3 text-right">แสดงได้</th>
               <th className="p-3">ฝั่ง user</th>
@@ -47,6 +48,10 @@ async function Results({ searchParams }: Pick<PageProps<"/admin/types">, "search
                   </Link>
                 </td>
                 <td className="p-3">{t.name}</td>
+                <td className="whitespace-nowrap p-3 text-xs text-zinc-500">
+                  {t.kind === "RULE" ? "กลุ่ม R" : "กลุ่ม E"}
+                  {t.mergedIntoCode ? ` · รวมเข้า ${t.mergedIntoCode}` : ""}
+                </td>
                 <td className="p-3 text-right">{t.activeCount}</td>
                 <td className="p-3 text-right">{t.visibleCount}</td>
                 <td className="p-3">{t.onUserSite ? <Badge tone="ok">แสดง</Badge> : <Badge>ไม่แสดง</Badge>}</td>

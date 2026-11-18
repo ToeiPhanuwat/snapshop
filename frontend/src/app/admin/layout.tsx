@@ -4,6 +4,7 @@ const LINKS = [
   { href: "/admin", label: "ภาพรวม" },
   { href: "/admin/inbox", label: "ไฟล์รอนำเข้า" },
   { href: "/admin/import", label: "อัปโหลด" },
+  { href: "/admin/rule-groups", label: "REVIEW กลุ่ม R" },
   { href: "/admin/products", label: "สินค้า" },
   { href: "/admin/types", label: "กลุ่ม" },
 ] as const;

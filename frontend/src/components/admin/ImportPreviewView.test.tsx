@@ -15,6 +15,8 @@ describe("ImportPreviewView", () => {
           notInLatestCount: 7,
           newTypeCount: 2,
           feedItemCount: 15,
+          ruleReviewCount: 89,
+          autoPassedCount: 7,
         })}
       />,
     );
@@ -26,13 +28,15 @@ describe("ImportPreviewView", () => {
       "7",
       "2",
       "15",
+      "89",
+      "7",
     ]);
   });
 
   test("says a section is empty", () => {
     render(<ImportPreviewView preview={importPreview()} />);
     expect(screen.getByText("ราคาเปลี่ยน (0)")).toBeInTheDocument();
-    expect(screen.getAllByText("ไม่มี")).toHaveLength(4);
+    expect(screen.getAllByText("ไม่มี")).toHaveLength(5);
   });
 
   test("shows the old and the new price of each changed item", () => {

@@ -34,10 +34,12 @@ export function ImportPreviewView({ preview }: { preview: ImportPreview }) {
     ["จะถูกซ่อน", preview.notInLatestCount],
     ["กลุ่มใหม่", preview.newTypeCount],
     ["ดึงจากฟีด", preview.feedItemCount],
+    ["รอ REVIEW กลุ่ม R", preview.ruleReviewCount],
+    ["กลุ่ม R ผ่านอัตโนมัติ", preview.autoPassedCount],
   ] as const;
   return (
     <div className="space-y-3">
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {counts.map(([label, value]) => (
           <div key={label} className="rounded-xl bg-white p-3 ring-1 ring-zinc-200">
             <dt className="text-xs text-zinc-500">{label}</dt>
@@ -64,6 +66,13 @@ export function ImportPreviewView({ preview }: { preview: ImportPreview }) {
       <Section title="กลุ่มใหม่" count={preview.newTypes.length}>
         <ul className="list-disc space-y-1 pl-5">
           {preview.newTypes.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+      </Section>
+      <Section title="กลุ่ม R ใหม่" count={preview.newRuleTypes.length}>
+        <ul className="list-disc space-y-1 pl-5">
+          {preview.newRuleTypes.map((name) => (
             <li key={name}>{name}</li>
           ))}
         </ul>

@@ -3,6 +3,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
+  confirmRuleGroup,
   discardInbox,
   importFile,
   importInbox,
@@ -14,6 +15,7 @@ import {
 import type { Result } from "@/lib/api/http";
 import { importResult } from "@/test/fixtures";
 import {
+  confirmRuleGroupAction,
   deactivateAction,
   discardInboxAction,
   importAction,
@@ -24,6 +26,7 @@ import {
 } from "./actions";
 
 vi.mock("@/lib/api/admin", () => ({
+  confirmRuleGroup: vi.fn(),
   discardInbox: vi.fn(),
   importFile: vi.fn(),
   importInbox: vi.fn(),
@@ -229,5 +232,39 @@ describe("retryFeedAction", () => {
     vi.mocked(retryFeedSync).mockResolvedValue(failed(409, { detail: "ยังไม่ได้ตั้งลิงก์ feed" }));
     expect(await retryFeedAction()).toEqual({ ok: false, message: "ยังไม่ได้ตั้งลิงก์ feed", errors: undefined });
     expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe("confirmRuleGroupAction", () => {
+  test("sends the rule group and every ticked name group", async () => {
+    vi.mocked(confirmRuleGroup).mockResolvedValue(okResult(undefined));
+    const data = form({ code: "PT000003" });
+    data.append("merge", "PT000011");
+    data.append("merge", "PT000012");
+
+    expect(await confirmRuleGroupAction(null, data)).toEqual({ ok: true, message: "ยืนยัน PT000003 แล้ว: รวม 2 กลุ่ม" });
+    expect(confirmRuleGroup).toHaveBeenCalledWith("PT000003", ["PT000011", "PT000012"]);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  test("nothing ticked still confirms the rule group", async () => {
+    vi.mocked(confirmRuleGroup).mockResolvedValue(okResult(undefined));
+    await confirmRuleGroupAction(null, form({ code: "PT000003" }));
+    expect(confirmRuleGroup).toHaveBeenCalledWith("PT000003", []);
+  });
+
+  test("a refusal is shown, not thrown", async () => {
+    vi.mocked(confirmRuleGroup).mockResolvedValue(failed(409, { detail: "กลุ่ม PT000011 รวมเข้ากลุ่ม R อื่นแล้ว" }));
+    expect(await confirmRuleGroupAction(null, form({ code: "PT000003" }))).toEqual({
+      ok: false,
+      message: "กลุ่ม PT000011 รวมเข้ากลุ่ม R อื่นแล้ว",
+      errors: undefined,
+    });
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  test("a form without the rule group code is a bug", async () => {
+    await expect(confirmRuleGroupAction(null, form({}))).rejects.toThrow("ไม่มีรหัสกลุ่ม R");
+    expect(confirmRuleGroup).not.toHaveBeenCalled();
   });
 });
