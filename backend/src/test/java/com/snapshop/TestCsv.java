@@ -26,6 +26,12 @@ public final class TestCsv {
 		return item(itemId, name, price, shop, label, groupName, "", "");
 	}
 
+	/** An item that also belongs to a rule group (กลุ่ม R). */
+	public TestCsv ruleItem(long itemId, String price, String label, String groupName, String ruleLabel,
+			String ruleName) {
+		return item(itemId, "Dr.PONG " + groupName, price, "Shop " + itemId, label, groupName, ruleLabel, ruleName);
+	}
+
 	TestCsv item(long itemId, String name, String price, String shop, String label, String groupName,
 			String ruleLabel, String ruleName) {
 		int dr = name.indexOf("Dr.");

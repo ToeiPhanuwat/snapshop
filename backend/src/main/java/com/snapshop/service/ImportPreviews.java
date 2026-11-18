@@ -26,9 +26,11 @@ final class ImportPreviews {
 		return new ImportPreviewResponse(fileName, counts.rows(), counts.inserted(), counts.priceChanged(),
 				counts.unchanged(), counts.notInLatest(), counts.newTypes(),
 				plan.newTypes().stream().map(NewType::name).toList(),
+				plan.newRuleTypes().stream().map(NewType::name).toList(),
 				priceChanges(plan, activeById),
 				plan.notInLatest().stream().map(id -> line(activeById.get(id))).toList(),
-				toReview(plan, activeById), plan.feedItemIds().size());
+				toReview(plan, activeById), plan.feedItemIds().size(), plan.ruleReviewCount(),
+				plan.autoPassedItemIds().size());
 	}
 
 	private static List<PriceChange> priceChanges(ImportPlan plan, Map<Long, MarketplaceProduct> activeById) {

@@ -28,8 +28,8 @@ class SnapshopApplicationTests {
 	void seed() {
 		jdbc.sql("TRUNCATE marketplace_product, product_type, import_batch RESTART IDENTITY CASCADE").update();
 		typeId = jdbc.sql("""
-				INSERT INTO product_type (category_code, type_name, type_name_norm)
-				VALUES ('DRPONG', 'Serum', 'serum') RETURNING product_type_id""").query(Long.class).single();
+				INSERT INTO product_type (category_code, kind, type_name, type_name_norm)
+				VALUES ('DRPONG', 'NAME', 'Serum', 'serum') RETURNING product_type_id""").query(Long.class).single();
 		batchId = jdbc.sql("""
 				INSERT INTO import_batch (category_code, source_files, row_count, inserted_count, price_changed_count,
 				  unchanged_count, not_in_latest_count, new_type_count)

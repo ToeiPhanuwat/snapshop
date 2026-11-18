@@ -1,7 +1,10 @@
 package com.snapshop.model.entity;
 
+import com.snapshop.model.enums.TypeKind;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,14 +36,19 @@ public class ProductType {
 	@Column(name = "type_name_norm", nullable = false)
 	private String typeNameNorm;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "kind", nullable = false, updatable = false)
+	private TypeKind kind;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
 	protected ProductType() {
 	}
 
-	public ProductType(String categoryCode, String typeName, String typeNameNorm, Instant createdAt) {
+	public ProductType(String categoryCode, TypeKind kind, String typeName, String typeNameNorm, Instant createdAt) {
 		this.categoryCode = categoryCode;
+		this.kind = kind;
 		this.typeName = typeName;
 		this.typeNameNorm = typeNameNorm;
 		this.createdAt = createdAt;
@@ -66,6 +74,9 @@ public class ProductType {
 		return typeNameNorm;
 	}
 
+	public TypeKind getKind() {
+		return kind;
+	}
 
 	public Instant getCreatedAt() {
 		return createdAt;

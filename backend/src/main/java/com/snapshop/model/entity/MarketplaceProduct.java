@@ -50,9 +50,13 @@ public class MarketplaceProduct {
 	@Column(name = "name_core", nullable = false, updatable = false)
 	private String nameCore;
 
-
+	/** Name group (กลุ่ม E). */
 	@Column(name = "product_type_id", nullable = false)
 	private long productTypeId;
+
+	/** Rule group (กลุ่ม R); null when the item has none. */
+	@Column(name = "rule_type_id")
+	private Long ruleTypeId;
 
 	@Column(name = "price")
 	private BigDecimal price;
@@ -122,7 +126,9 @@ public class MarketplaceProduct {
 	}
 
 	/** A new current version, first seen in import batch {@code batchId}. */
-	public MarketplaceProduct(Listing listing, long productTypeId, ProductStatus status, long batchId, Instant now) {
+	public MarketplaceProduct(Listing listing, long productTypeId, Long ruleTypeId, ProductStatus status, long batchId,
+			Instant now) {
+		this.ruleTypeId = ruleTypeId;
 		this.itemId = listing.itemId();
 		this.shopId = listing.shopId();
 		this.shopName = listing.shopName();
@@ -185,6 +191,7 @@ public class MarketplaceProduct {
 		next.namePrefix = namePrefix;
 		next.nameCore = nameCore;
 		next.productTypeId = productTypeId;
+		next.ruleTypeId = ruleTypeId;
 		next.price = newPrice;
 		next.soldText = soldText;
 		next.commissionRate = commissionRate;
@@ -267,6 +274,10 @@ public class MarketplaceProduct {
 
 	public long getProductTypeId() {
 		return productTypeId;
+	}
+
+	public Long getRuleTypeId() {
+		return ruleTypeId;
 	}
 
 	public BigDecimal getPrice() {

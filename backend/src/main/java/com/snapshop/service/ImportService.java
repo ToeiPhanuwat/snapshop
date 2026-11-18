@@ -7,6 +7,7 @@ import com.snapshop.model.entity.MarketplaceProduct;
 import com.snapshop.model.entity.ProductType;
 import com.snapshop.model.enums.ActiveFlag;
 import com.snapshop.model.enums.DeactivationReason;
+import com.snapshop.model.enums.TypeKind;
 import com.snapshop.repository.ImportBatchRepository;
 import com.snapshop.repository.ImportLockRepository;
 import com.snapshop.repository.ItemType;
@@ -97,13 +98,24 @@ public class ImportService {
 		Map<Long, ActiveVersion> activeByItem = active.stream().collect(Collectors.toMap(
 				MarketplaceProduct::getItemId,
 				p -> new ActiveVersion(p.getId(), p.getItemId(), p.getProductTypeId(), p.getPrice(), p.getStatus())));
-		Map<Long, Long> typeByItem = new HashMap<>();
-		for (ItemType it : products.findItemTypesInCategory(category)) {
-			typeByItem.put(it.itemId(), it.productTypeId());
+		List<ProductType> categoryTypes = types.findByCategoryCode(category);
+		return new CurrentState(activeByItem, byItem(products.findItemTypesInCategory(category)),
+				byName(categoryTypes, TypeKind.NAME), byItem(products.findItemRuleTypesInCategory(category)),
+				byName(categoryTypes, TypeKind.RULE));
+	}
+
+	/** Later versions win, so an item maps to the group of its newest version. */
+	private static Map<Long, Long> byItem(List<ItemType> itemTypes) {
+		Map<Long, Long> byItem = new HashMap<>();
+		for (ItemType it : itemTypes) {
+			byItem.put(it.itemId(), it.productTypeId());
 		}
-		Map<String, Long> typeByName = types.findByCategoryCode(category).stream()
+		return byItem;
+	}
+
+	private static Map<String, Long> byName(List<ProductType> categoryTypes, TypeKind kind) {
+		return categoryTypes.stream().filter(t -> t.getKind() == kind)
 				.collect(Collectors.toMap(ProductType::getTypeNameNorm, ProductType::getId));
-		return new CurrentState(activeByItem, typeByItem, typeByName);
 	}
 
 	private static ImportBatch.Counts counts(List<ImportRow> rows, ImportPlan plan) {
@@ -123,6 +135,7 @@ public class ImportService {
 		private final Instant now;
 		private final Map<Long, MarketplaceProduct> activeById;
 		private final Map<String, Long> createdTypeIds = new HashMap<>();
+		private final Map<String, Long> createdRuleTypeIds = new HashMap<>();
 
 		PlanApplier(String category, long batchId, Instant now, Map<Long, MarketplaceProduct> activeById) {
 			this.category = category;
@@ -132,8 +145,8 @@ public class ImportService {
 		}
 
 		void apply(ImportPlan plan) {
-			plan.newTypes().forEach(t -> createdTypeIds.put(t.normName(),
-					types.save(new ProductType(category, t.name(), t.normName(), now)).getId()));
+			plan.newTypes().forEach(t -> createdTypeIds.put(t.normName(), create(TypeKind.NAME, t)));
+			plan.newRuleTypes().forEach(t -> createdRuleTypeIds.put(t.normName(), create(TypeKind.RULE, t)));
 			plan.newVersions().stream().filter(v -> v.replacesProductId() != null)
 					.forEach(v -> activeById.get(v.replacesProductId()).deactivate(DeactivationReason.PRICE_CHANGED, now));
 			products.flush();
@@ -144,14 +157,19 @@ public class ImportService {
 			plan.notInLatest().forEach(id -> activeById.get(id).markNotInLatest());
 		}
 
-		private void insert(NewVersion v) {
-			products.save(new MarketplaceProduct(listing(v.row()), typeId(v.type()), v.status(), batchId, now));
+		private long create(TypeKind kind, ImportPlan.NewType t) {
+			return types.save(new ProductType(category, kind, t.name(), t.normName(), now)).getId();
 		}
 
-		private long typeId(TypeRef ref) {
+		private void insert(NewVersion v) {
+			products.save(new MarketplaceProduct(listing(v.row()), id(v.type(), createdTypeIds),
+					v.ruleType() == null ? null : id(v.ruleType(), createdRuleTypeIds), v.status(), batchId, now));
+		}
+
+		private static long id(TypeRef ref, Map<String, Long> created) {
 			return switch (ref) {
 				case TypeRef.Existing e -> e.productTypeId();
-				case TypeRef.Created c -> createdTypeIds.get(c.normName());
+				case TypeRef.Created c -> created.get(c.normName());
 			};
 		}
 

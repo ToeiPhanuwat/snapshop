@@ -35,12 +35,13 @@ import org.springframework.stereotype.Component;
  * <li>otherwise a new type.</li>
  * </ol>
  * When known group mates belong to different types, nothing is merged and new items are marked REVIEW.
+ * Rule groups ("กลุ่ม R") follow {@link RulePlanner}.
  */
 @Component
 public class ImportPlanner {
 
 	public ImportPlan plan(List<ImportRow> rows, CurrentState state) {
-		PlanBuilder plan = new PlanBuilder(state);
+		PlanBuilder plan = new PlanBuilder(state, new RulePlanner(rows, state));
 		rows.stream()
 				.collect(Collectors.groupingBy(ImportRow::fileGroupLabel, LinkedHashMap::new, Collectors.toList()))
 				.values()
@@ -52,14 +53,16 @@ public class ImportPlanner {
 	private static final class PlanBuilder {
 
 		private final CurrentState state;
+		private final RulePlanner rules;
 		private final Map<String, NewType> newTypes = new LinkedHashMap<>();
 		private final List<NewVersion> newVersions = new ArrayList<>();
 		private final List<SeenAgain> seenAgain = new ArrayList<>();
 		private final List<Long> notInLatest = new ArrayList<>();
 		private final Set<Long> feedItemIds = new TreeSet<>();
 
-		PlanBuilder(CurrentState state) {
+		PlanBuilder(CurrentState state, RulePlanner rules) {
 			this.state = state;
+			this.rules = rules;
 		}
 
 		void addFileGroup(List<ImportRow> group) {
@@ -87,8 +90,8 @@ public class ImportPlanner {
 		}
 
 		ImportPlan build() {
-			return new ImportPlan(List.copyOf(newTypes.values()), newVersions, seenAgain, notInLatest,
-					List.copyOf(feedItemIds));
+			return new ImportPlan(List.copyOf(newTypes.values()), rules.newRuleTypes(), newVersions, seenAgain,
+					notInLatest, List.copyOf(feedItemIds), rules.autoPassed());
 		}
 
 		private boolean isKnown(ImportRow row) {
@@ -108,12 +111,15 @@ public class ImportPlanner {
 			return new Created(normName);
 		}
 
-		private void addRow(ImportRow row, TypeRef type, boolean needsReview) {
+		private void addRow(ImportRow row, TypeRef type, boolean conflict) {
+			boolean known = isKnown(row);
+			TypeRef ruleType = rules.ruleTypeOf(row, known);
+			boolean needsReview = conflict || rules.needsReview(row, known);
 			ActiveVersion active = state.activeByItem().get(row.itemId());
 			boolean priceKnown = row.price() != null || (active != null && active.price() != null);
 			ProductStatus status = statusOf(row, needsReview, priceKnown);
 			if (active == null) {
-				newVersions.add(new NewVersion(row, type, status, null));
+				newVersions.add(new NewVersion(row, type, ruleType, status, null));
 				feedItemIds.add(row.itemId());
 				return;
 			}
@@ -124,7 +130,7 @@ public class ImportPlanner {
 					feedItemIds.add(row.itemId());
 				}
 			} else {
-				newVersions.add(new NewVersion(row, type, kept, active.productId()));
+				newVersions.add(new NewVersion(row, type, ruleType, kept, active.productId()));
 				feedItemIds.add(row.itemId());
 			}
 		}
