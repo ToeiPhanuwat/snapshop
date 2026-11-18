@@ -64,6 +64,7 @@ describe("ImportPreviewView", () => {
           toHide: [{ itemId: 2001, name: "Old cream" }],
           toReview: [{ itemId: 3001, name: "New toner" }],
           newTypes: ["Toner 100ml"],
+          newRuleTypes: ["Calmmea B5 Aqua Gel"],
         })}
       />,
     );
@@ -71,6 +72,8 @@ describe("ImportPreviewView", () => {
     expect(screen.getByText(/Old cream/).closest("li")).toHaveTextContent("2001 Old cream");
     expect(screen.getByText(/New toner/).closest("li")).toHaveTextContent("3001 New toner");
     expect(screen.getByText("Toner 100ml")).toBeInTheDocument();
+    expect(screen.getByText("กลุ่ม R ใหม่ (1)")).toBeInTheDocument();
+    expect(screen.getByText("Calmmea B5 Aqua Gel").tagName).toBe("LI");
   });
 
   test("opens sections of up to 20 lines and keeps longer or empty ones closed", () => {

@@ -84,6 +84,7 @@ class ImportPlannerTest {
 
 		assertNewVersion(single(plan.newVersions()), 4, new Existing(10), ProductStatus.REVIEW);
 		assertThat(plan.seenAgain()).extracting(SeenAgain::status).containsOnly(ProductStatus.OK);
+		assertThat(plan.ruleReviewCount()).isZero();
 	}
 
 	@Test
@@ -235,6 +236,7 @@ class ImportPlannerTest {
 		assertThat(plan.newVersions()).extracting(NewVersion::ruleType).containsOnly(new Created("serum"));
 		assertThat(plan.newVersions()).extracting(NewVersion::status).containsOnly(ProductStatus.REVIEW);
 		assertThat(plan.autoPassedItemIds()).isEmpty();
+		assertThat(plan.ruleReviewCount()).isEqualTo(3);
 	}
 
 	@Test
@@ -244,6 +246,17 @@ class ImportPlannerTest {
 
 		assertThat(plan.newVersions()).extracting(NewVersion::status).containsOnly(ProductStatus.OK);
 		assertThat(plan.autoPassedItemIds()).containsExactly(1L, 2L);
+		assertThat(plan.ruleReviewCount()).isZero();
+	}
+
+	@Test
+	void storedRuleItemStillInReviewWithNewPriceIsNotCountedAsNewReview() {
+		state.active(1, 10, 100, ProductStatus.REVIEW).rule(1, 50);
+
+		ImportPlan plan = plan(rule(1, "E001", "S", 90, "R001", "X"));
+
+		assertThat(single(plan.newVersions()).status()).isEqualTo(ProductStatus.REVIEW);
+		assertThat(plan.ruleReviewCount()).isZero();
 	}
 
 	@Test
