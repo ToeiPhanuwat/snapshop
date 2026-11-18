@@ -229,15 +229,12 @@ public class MarketplaceProduct {
 		this.deactivatedAt = now;
 	}
 
-	/** Admin checked the item. An item without a known price cannot be shown, so it stays in REVIEW. */
-	public void resolveReview() {
+	/** Admin checked the item. Without a known price it waits for the feed instead of showing. */
+	public void passReview() {
 		if (status != ProductStatus.REVIEW) {
 			throw new BusinessRuleException("สินค้า " + itemId + " ไม่ได้อยู่ในสถานะ REVIEW");
 		}
-		if (price == null) {
-			throw new BusinessRuleException("สินค้า " + itemId + " ยังไม่มีราคา รอนำเข้ารอบที่มีราคาเต็ม");
-		}
-		this.status = ProductStatus.OK;
+		this.status = price == null ? ProductStatus.PRICE_PENDING : ProductStatus.OK;
 	}
 
 	public void moveTo(long newProductTypeId) {

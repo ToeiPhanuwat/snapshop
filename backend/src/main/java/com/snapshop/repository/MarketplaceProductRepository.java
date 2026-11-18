@@ -35,6 +35,17 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
 
 	List<MarketplaceProduct> findByItemIdInAndActiveFlag(Collection<Long> itemIds, ActiveFlag activeFlag);
 
+	/** Rule groups that still have current items in the given status. */
+	@Query("""
+			select distinct p.ruleTypeId from MarketplaceProduct p
+			where p.activeFlag = :flag and p.status = :status and p.ruleTypeId is not null""")
+	List<Long> findRuleTypeIdsWithStatus(@Param("flag") ActiveFlag flag, @Param("status") ProductStatus status);
+
+	List<MarketplaceProduct> findByRuleTypeIdAndActiveFlag(long ruleTypeId, ActiveFlag activeFlag);
+
+	List<MarketplaceProduct> findByProductTypeIdInAndActiveFlagOrderByItemId(Collection<Long> productTypeIds,
+			ActiveFlag activeFlag);
+
 	/** Current items the feed still has to supply: waiting for a price, or never looked up. */
 	@Query("""
 			select p.itemId from MarketplaceProduct p

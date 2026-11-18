@@ -76,7 +76,7 @@ class AdminProductApiTest {
 	}
 
 	@Test
-	void resolvingIsRefusedWhenNotInReviewOrPriceStillUnknown() throws Exception {
+	void resolvingIsRefusedWhenNotInReview() throws Exception {
 		mvc.perform(post("/api/admin/products/{itemId}/resolve", 1).with(ADMIN)).andExpect(status().isConflict());
 		mvc.perform(post("/api/admin/products/{itemId}/resolve", 5).with(ADMIN)).andExpect(status().isConflict());
 	}

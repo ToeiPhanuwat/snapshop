@@ -1,5 +1,6 @@
 package com.snapshop.model.entity;
 
+import com.snapshop.exception.BusinessRuleException;
 import com.snapshop.model.enums.TypeKind;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,6 +41,10 @@ public class ProductType {
 	@Column(name = "kind", nullable = false, updatable = false)
 	private TypeKind kind;
 
+	/** The rule group this name group was merged into; null when not merged. */
+	@Column(name = "merged_into_type_id")
+	private Long mergedIntoTypeId;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
@@ -76,6 +81,21 @@ public class ProductType {
 
 	public TypeKind getKind() {
 		return kind;
+	}
+
+	public Long getMergedIntoTypeId() {
+		return mergedIntoTypeId;
+	}
+
+	/** The admin merges this whole name group into a rule group; merging into the same one again changes nothing. */
+	public void mergeInto(ProductType ruleGroup) {
+		if (kind != TypeKind.NAME || ruleGroup.kind != TypeKind.RULE) {
+			throw new BusinessRuleException("รวมได้เฉพาะกลุ่ม E เข้ากลุ่ม R");
+		}
+		if (mergedIntoTypeId != null && !mergedIntoTypeId.equals(ruleGroup.id)) {
+			throw new BusinessRuleException("กลุ่ม " + code + " รวมเข้ากลุ่ม R อื่นแล้ว");
+		}
+		this.mergedIntoTypeId = ruleGroup.id;
 	}
 
 	public Instant getCreatedAt() {
