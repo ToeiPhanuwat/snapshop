@@ -1,8 +1,12 @@
-รหัสสินค้า,ชื่อสินค้า,ราคา,ขาย,ชื่อร้านค้า,อัตราค่าคอมมิชชัน,คอมมิชชัน,ลิงก์สินค้า,ลิงก์ข้อเสนอ,รหัสกลุ่ม,ชื่อกลุ่ม,วิธีจัดกลุ่ม
-900000000001,Dr.PONG E2E Sunscreen SPF50 กันแดดเนื้อบางเบา,299,1.2พัน,E2E Shop Alpha,5%,฿14.95,https://shopee.co.th/product/700000001/900000000001,https://s.shopee.co.th/e2e1,G1,Dr.PONG E2E Sunscreen SPF50,ชื่ออังกฤษตรงกัน
-900000000002,Dr.PONG E2E Sunscreen SPF50 กันแดด,349,85,E2E Shop Beta,5%,฿17.45,https://shopee.co.th/product/700000002/900000000002,https://s.shopee.co.th/e2e2,G1,Dr.PONG E2E Sunscreen SPF50,ชื่ออังกฤษตรงกัน
-900000000003,Dr.PONG E2E Sunscreen SPF50,399,3,E2E Shop Gamma,5%,฿19.95,https://shopee.co.th/product/700000003/900000000003,https://s.shopee.co.th/e2e3,G1,Dr.PONG E2E Sunscreen SPF50,ชื่ออังกฤษตรงกัน
-900000000004,Dr.PONG E2E Vitamin C Serum เซรั่มวิตามินซี,450,20,E2E Shop Alpha,5%,฿22.50,https://shopee.co.th/product/700000001/900000000004,https://s.shopee.co.th/e2e4,G2,Dr.PONG E2E Vitamin C Serum,ชื่ออังกฤษตรงกัน
-900000000005,Dr.PONG E2E Vitamin C Serum,490,7,E2E Shop Delta,5%,฿24.50,https://shopee.co.th/product/700000004/900000000005,https://s.shopee.co.th/e2e5,G2,Dr.PONG E2E Vitamin C Serum,ชื่ออังกฤษตรงกัน
-900000000006,Dr.PONG E2E Vitamin C Serum ขวดใหญ่,1.0พัน,2,E2E Shop Beta,5%,฿50.00,https://shopee.co.th/product/700000002/900000000006,https://s.shopee.co.th/e2e6,G2,Dr.PONG E2E Vitamin C Serum,ชื่ออังกฤษตรงกัน
-900000000007,Dr.PONG E2E Night Cream ครีมกลางคืน,590,4,E2E Shop Delta,5%,฿29.50,https://shopee.co.th/product/700000004/900000000007,https://s.shopee.co.th/e2e7,G3,Dr.PONG E2E Night Cream,ไม่มีคู่
+รหัสสินค้า,namePrefix,ชื่อสินค้า,ราคา,ขาย,ชื่อร้านค้า,อัตราค่าคอมมิชชัน,คอมมิชชัน,ลิงก์สินค้า,ลิงก์ข้อเสนอ,รหัสกลุ่ม,ชื่อกลุ่ม,รหัสกลุ่มตามกฎ,ชื่อกลุ่มตามกฎ
+900000000001,,Dr.PONG E2E Sunscreen SPF50 กันแดดเนื้อบางเบา,299,1.2พัน,E2E Shop Alpha,5%,฿14.95,https://shopee.co.th/product/700000001/900000000001,https://s.shopee.co.th/e2e1,E001,Dr.PONG E2E Sunscreen SPF50,,
+900000000002,,Dr.PONG E2E Sunscreen SPF50 กันแดด,349,85,E2E Shop Beta,5%,฿17.45,https://shopee.co.th/product/700000002/900000000002,https://s.shopee.co.th/e2e2,E001,Dr.PONG E2E Sunscreen SPF50,,
+900000000003,,Dr.PONG E2E Sunscreen SPF50,399,3,E2E Shop Gamma,5%,฿19.95,https://shopee.co.th/product/700000003/900000000003,https://s.shopee.co.th/e2e3,E001,Dr.PONG E2E Sunscreen SPF50,,
+900000000004,,Dr.PONG E2E Vitamin C Serum เซรั่มวิตามินซี,450,20,E2E Shop Alpha,5%,฿22.50,https://shopee.co.th/product/700000001/900000000004,https://s.shopee.co.th/e2e4,E002,Dr.PONG E2E Vitamin C Serum,,
+900000000005,,Dr.PONG E2E Vitamin C Serum,490,7,E2E Shop Delta,5%,฿24.50,https://shopee.co.th/product/700000004/900000000005,https://s.shopee.co.th/e2e5,E002,Dr.PONG E2E Vitamin C Serum,,
+900000000006,,Dr.PONG E2E Vitamin C Serum ขวดใหญ่,1.0พัน,2,E2E Shop Beta,5%,฿50.00,https://shopee.co.th/product/700000002/900000000006,https://s.shopee.co.th/e2e6,E002,Dr.PONG E2E Vitamin C Serum,,
+900000000007,,Dr.PONG E2E Night Cream ครีมกลางคืน,590,4,E2E Shop Delta,5%,฿29.50,https://shopee.co.th/product/700000004/900000000007,https://s.shopee.co.th/e2e7,E003,Dr.PONG E2E Night Cream,,
+900000000008,(1ชิ้น),Dr.PONG E2E Aqua Gel 10 g,250,30,E2E Shop Alpha,5%,฿12.50,https://shopee.co.th/product/700000001/900000000008,https://s.shopee.co.th/e2e8,E004,Dr.PONG E2E Aqua Gel 10 g,R001,E2E Aqua Gel
+900000000009,[ยกกล่อง],Dr.PONG E2E Aqua Gel x6,1200,5,E2E Shop Beta,5%,฿60.00,https://shopee.co.th/product/700000002/900000000009,https://s.shopee.co.th/e2e9,E005,Dr.PONG E2E Aqua Gel x6,R001,E2E Aqua Gel
+900000000010,,Dr.PONG E2E CoQ10 30 mg,300,12,E2E Shop Alpha,5%,฿15.00,https://shopee.co.th/product/700000001/900000000010,https://s.shopee.co.th/e2e10,E006,Dr.PONG E2E CoQ10 30 mg,R002,E2E CoQ10
+900000000011,,Dr.PONG E2E CoQ10 30 mg Coenzyme,320,9,E2E Shop Delta,5%,฿16.00,https://shopee.co.th/product/700000004/900000000011,https://s.shopee.co.th/e2e11,E006,Dr.PONG E2E CoQ10 30 mg,R002,E2E CoQ10
