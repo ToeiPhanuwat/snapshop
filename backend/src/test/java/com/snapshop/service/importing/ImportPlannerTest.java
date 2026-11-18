@@ -1,8 +1,8 @@
 package com.snapshop.service.importing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
-import com.snapshop.model.enums.GroupingMethod;
 import com.snapshop.model.enums.ProductStatus;
 import com.snapshop.service.importing.ImportPlan.NewType;
 import com.snapshop.service.importing.ImportPlan.NewVersion;
@@ -27,7 +27,7 @@ class ImportPlannerTest {
 		ImportPlan plan = plan(row(1, "E001", "Dr.PONG Serum", 100), row(2, "E001", "Dr.PONG Serum", 120));
 
 		assertThat(plan.newTypes()).containsExactly(
-				new NewType("dr pong serum", "Dr.PONG Serum", GroupingMethod.ENGLISH_NAME_MATCH));
+				new NewType("dr pong serum", "Dr.PONG Serum"));
 		assertThat(plan.newItemCount()).isEqualTo(2);
 		assertThat(plan.priceChangeCount()).isZero();
 		assertThat(plan.newVersions()).extracting(NewVersion::type)
@@ -84,6 +84,7 @@ class ImportPlannerTest {
 
 		assertNewVersion(single(plan.newVersions()), 4, new Existing(10), ProductStatus.REVIEW);
 		assertThat(plan.seenAgain()).extracting(SeenAgain::status).containsOnly(ProductStatus.OK);
+		assertThat(plan.ruleReviewCount()).isZero();
 	}
 
 	@Test
@@ -224,6 +225,82 @@ class ImportPlannerTest {
 				.containsExactly(ProductStatus.TEST, ProductStatus.OUT_OF_STOCK);
 	}
 
+	// ---- rule groups (กลุ่ม R) ----
+
+	@Test
+	void newItemsInRuleGroupSpanningNameGroupsWaitForReview() {
+		ImportPlan plan = plan(rule(1, "E001", "Serum A", 100, "R001", "Serum"),
+				rule(2, "E001", "Serum A", 120, "R001", "Serum"), rule(3, "E002", "Serum B", 90, "R001", "Serum"));
+
+		assertThat(plan.newRuleTypes()).containsExactly(new NewType("serum", "Serum"));
+		assertThat(plan.newVersions()).extracting(NewVersion::ruleType).containsOnly(new Created("serum"));
+		assertThat(plan.newVersions()).extracting(NewVersion::status).containsOnly(ProductStatus.REVIEW);
+		assertThat(plan.autoPassedItemIds()).isEmpty();
+		assertThat(plan.ruleReviewCount()).isEqualTo(3);
+	}
+
+	@Test
+	void ruleGroupEqualToOneNameGroupPassesAutomatically() {
+		ImportPlan plan = plan(rule(1, "E001", "CoQ10 30 mg", 100, "R004", "CoQ10"),
+				rule(2, "E001", "CoQ10 30 mg", 120, "R004", "CoQ10"));
+
+		assertThat(plan.newVersions()).extracting(NewVersion::status).containsOnly(ProductStatus.OK);
+		assertThat(plan.autoPassedItemIds()).containsExactly(1L, 2L);
+		assertThat(plan.ruleReviewCount()).isZero();
+	}
+
+	@Test
+	void storedRuleItemStillInReviewWithNewPriceIsNotCountedAsNewReview() {
+		state.active(1, 10, 100, ProductStatus.REVIEW).rule(1, 50);
+
+		ImportPlan plan = plan(rule(1, "E001", "S", 90, "R001", "X"));
+
+		assertThat(single(plan.newVersions()).status()).isEqualTo(ProductStatus.REVIEW);
+		assertThat(plan.ruleReviewCount()).isZero();
+	}
+
+	@Test
+	void ruleGroupInsideLargerNameGroupNeedsReviewOnlyForItsItems() {
+		ImportPlan plan = plan(rule(1, "E001", "Serum", 100, "R001", "Sachet"),
+				rule(2, "E001", "Serum", 120, "R001", "Sachet"), row(3, "E001", "Serum", 300));
+
+		assertThat(plan.newVersions()).extracting(NewVersion::status)
+				.containsExactly(ProductStatus.REVIEW, ProductStatus.REVIEW, ProductStatus.OK);
+		assertThat(plan.newVersions().get(2).ruleType()).isNull();
+	}
+
+	@Test
+	void newItemJoinsExistingRuleTypeWithSameNormalizedName() {
+		state.ruleType("calmmea b5 aqua gel", 50);
+
+		ImportPlan plan = plan(rule(1, "E001", "Aqua Gel 10 g", 100, "R003", "Calmmea B5 Aqua-Gel"),
+				rule(2, "E002", "Aqua Gel x6", 500, "R003", "Calmmea B5 Aqua-Gel"));
+
+		assertThat(plan.newRuleTypes()).isEmpty();
+		assertThat(plan.newVersions()).extracting(NewVersion::ruleType).containsOnly(new Existing(50));
+	}
+
+	@Test
+	void knownItemKeepsItsStoredRuleGroupAndIsNotReviewedAgain() {
+		state.active(1, 10, 100).rule(1, 50).active(2, 10, 100);
+
+		ImportPlan plan = plan(rule(1, "E001", "S", 90, "R009", "Other"), rule(2, "E001", "S", 80, "R009", "Other"),
+				rule(3, "E002", "T", 70, "R009", "Other"));
+
+		assertThat(plan.newRuleTypes()).containsExactly(new NewType("other", "Other"));
+		assertThat(plan.newVersions()).extracting(v -> v.row().itemId(), NewVersion::ruleType, NewVersion::status)
+				.containsExactly(tuple(1L, new Existing(50), ProductStatus.OK), tuple(2L, null, ProductStatus.OK),
+						tuple(3L, new Created("other"), ProductStatus.REVIEW));
+	}
+
+	@Test
+	void ruleItemWithoutPriceWaitsForReviewFirst() {
+		ImportPlan plan = plan(rule(1, "E001", "S", null, "R001", "X"), rule(2, "E002", "T", 10, "R001", "X"));
+
+		assertThat(plan.newVersions().getFirst().status()).isEqualTo(ProductStatus.REVIEW);
+		assertThat(plan.feedItemIds()).containsExactly(1L, 2L);
+	}
+
 	// ---- helpers ----
 
 	private ImportPlan plan(ImportRow... rows) {
@@ -247,10 +324,17 @@ class ImportPlannerTest {
 	}
 
 	private static ImportRow row(long itemId, String label, String groupName, Integer price, String name, String shop) {
-		return new ImportRow(2, itemId, 9, shop, ProductName.of(name),
+		return new ImportRow(2, itemId, 9, shop, new ProductName("", name),
 				price == null ? null : BigDecimal.valueOf(price), null, null, null,
-				"https://shopee.co.th/product/9/" + itemId, null, label, groupName,
-				GroupingMethod.ENGLISH_NAME_MATCH);
+				"https://shopee.co.th/product/9/" + itemId, null, label, groupName, null);
+	}
+
+	private static ImportRow rule(long itemId, String label, String groupName, Integer price, String ruleLabel,
+			String ruleName) {
+		ImportRow r = row(itemId, label, groupName, price);
+		return new ImportRow(r.lineNumber(), r.itemId(), r.shopId(), r.shopName(), r.name(), r.price(), r.soldText(),
+				r.commissionRate(), r.commissionAmount(), r.productUrl(), r.affiliateUrl(), r.fileGroupLabel(),
+				r.groupName(), new RuleGroup(ruleLabel, ruleName));
 	}
 
 	/** Existing database state for one category; product id = 1000 + item id. */
@@ -258,6 +342,8 @@ class ImportPlannerTest {
 		final Map<Long, ActiveVersion> active = new HashMap<>();
 		final Map<Long, Long> typeByItem = new HashMap<>();
 		final Map<String, Long> typeByName = new HashMap<>();
+		final Map<Long, Long> ruleTypeByItem = new HashMap<>();
+		final Map<String, Long> ruleTypeByName = new HashMap<>();
 
 		State active(long itemId, long typeId, int price) {
 			return active(itemId, typeId, price, ProductStatus.OK);
@@ -285,8 +371,18 @@ class ImportPlannerTest {
 			return this;
 		}
 
+		State rule(long itemId, long ruleTypeId) {
+			ruleTypeByItem.put(itemId, ruleTypeId);
+			return this;
+		}
+
+		State ruleType(String normName, long ruleTypeId) {
+			ruleTypeByName.put(normName, ruleTypeId);
+			return this;
+		}
+
 		CurrentState build() {
-			return new CurrentState(active, typeByItem, typeByName);
+			return new CurrentState(active, typeByItem, typeByName, ruleTypeByItem, ruleTypeByName);
 		}
 	}
 

@@ -38,14 +38,50 @@ class AdminImportControllerTest {
 	void importsRealFile() throws Exception {
 		upload(TestCsv.fixture())
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.rowCount").value(192))
-				.andExpect(jsonPath("$.insertedCount").value(192))
-				.andExpect(jsonPath("$.newTypeCount").value(122))
+				.andExpect(jsonPath("$.rowCount").value(431))
+				.andExpect(jsonPath("$.insertedCount").value(431))
+				.andExpect(jsonPath("$.newTypeCount").value(205))
 				.andExpect(jsonPath("$.priceChangedCount").value(0));
 
 		assertThat(statusCounts()).containsExactlyInAnyOrderEntriesOf(
-				Map.of("OK", 187L, "PRICE_PENDING", 3L, "TEST", 1L, "OUT_OF_STOCK", 1L));
-		assertThat(count("SELECT count(*) FROM marketplace_product WHERE name_prefix <> ''")).isEqualTo(95);
+				Map.of("OK", 313L, "REVIEW", 89L, "PRICE_PENDING", 29L));
+		assertThat(count("SELECT count(*) FROM marketplace_product WHERE name_prefix <> ''")).isEqualTo(281);
+		assertThat(count("SELECT count(*) FROM marketplace_product WHERE rule_type_id IS NOT NULL")).isEqualTo(96);
+		assertThat(count("SELECT count(*) FROM product_type WHERE kind = 'RULE'")).isEqualTo(16);
+	}
+
+	@Test
+	void storesBothGroupsAndHoldsRuleItemsBackUntilReviewed() throws Exception {
+		upload(csv().ruleItem(1, "100", "E001", "Aqua Gel 10 g", "R003", "Calmmea B5 Aqua Gel")
+				.ruleItem(2, "120", "E002", "Aqua Gel x6", "R003", "Calmmea B5 Aqua Gel")
+				.ruleItem(3, "300", "E003", "CoQ10 30 mg", "R004", "CoQ10")
+				.ruleItem(4, "320", "E003", "CoQ10 30 mg", "R004", "CoQ10")
+				.item(5, "50", "E004", "Cream").file())
+				.andExpect(status().isOk());
+
+		assertThat(jdbc.sql("""
+				SELECT mp.item_id || ':' || e.kind || ':' || coalesce(r.type_name, '-') || ':' || mp.status
+				FROM marketplace_product mp
+				JOIN product_type e ON e.product_type_id = mp.product_type_id
+				LEFT JOIN product_type r ON r.product_type_id = mp.rule_type_id
+				ORDER BY mp.item_id""").query(String.class).list())
+				.containsExactly("1:NAME:Calmmea B5 Aqua Gel:REVIEW", "2:NAME:Calmmea B5 Aqua Gel:REVIEW",
+						"3:NAME:CoQ10:OK", "4:NAME:CoQ10:OK", "5:NAME:-:OK");
+	}
+
+	@Test
+	void storedItemKeepsItsRuleGroupWhenTheNextFileSaysOtherwise() throws Exception {
+		upload(csv().ruleItem(1, "100", "E001", "Serum", "R001", "Sachet").item(2, "120", "E002", "Toner").file());
+
+		upload(csv().ruleItem(1, "90", "E001", "Serum", "R007", "Other").ruleItem(2, "120", "E002", "Toner", "R007",
+				"Other").file())
+				.andExpect(status().isOk());
+
+		assertThat(jdbc.sql("""
+				SELECT mp.item_id || ':' || coalesce(r.type_name, '-') || ':' || mp.status
+				FROM marketplace_product mp LEFT JOIN product_type r ON r.product_type_id = mp.rule_type_id
+				WHERE mp.active_flag = 'Y' ORDER BY mp.item_id""").query(String.class).list())
+				.containsExactly("1:Sachet:OK", "2:-:OK");
 	}
 
 	@Test
@@ -56,12 +92,12 @@ class AdminImportControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.insertedCount").value(0))
 				.andExpect(jsonPath("$.priceChangedCount").value(0))
-				.andExpect(jsonPath("$.unchangedCount").value(192))
+				.andExpect(jsonPath("$.unchangedCount").value(431))
 				.andExpect(jsonPath("$.notInLatestCount").value(0))
 				.andExpect(jsonPath("$.newTypeCount").value(0));
 
-		assertThat(count("SELECT count(*) FROM marketplace_product")).isEqualTo(192);
-		assertThat(count("SELECT count(*) FROM product_type")).isEqualTo(122);
+		assertThat(count("SELECT count(*) FROM marketplace_product")).isEqualTo(431);
+		assertThat(count("SELECT count(*) FROM product_type")).isEqualTo(221);
 	}
 
 	@Test

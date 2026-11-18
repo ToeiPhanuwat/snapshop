@@ -37,8 +37,8 @@ class PublicApiTest {
 	/** Serum: 2 shops; Cream: 1 shop; Toner: 1 shop OK + 1 shop waiting for its price from the feed. */
 	static TestCsv baseCatalog() {
 		return csv()
-				.item(1, "promo Dr.PONG Serum 15ml", "100", "Shop A", "Mall", "E001", "Dr.PONG Serum")
-				.item(2, "Dr.PONG Serum 16ml", "120", "Shop B", "ร้านแนะนำ", "E001", "Dr.PONG Serum")
+				.item(1, "promo Dr.PONG Serum 15ml", "100", "Shop A", "E001", "Dr.PONG Serum")
+				.item(2, "Dr.PONG Serum 16ml", "120", "Shop B", "E001", "Dr.PONG Serum")
 				.item(3, "50", "U001", "Cream")
 				.item(4, "80", "E002", "Toner")
 				.item(5, "1.0พัน", "E002", "Toner");
@@ -64,7 +64,7 @@ class PublicApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.offers[*].itemId", contains(1, 2)))
 				.andExpect(jsonPath("$.offers[0].displayName").value("promo Dr.PONG Serum 15ml"))
-				.andExpect(jsonPath("$.offers[0].namePrefix").value("promo "))
+				.andExpect(jsonPath("$.offers[0].namePrefix").value("promo"))
 				.andExpect(jsonPath("$.offers[0].shopType").value("MALL"))
 				.andExpect(jsonPath("$.offers[0].link").value("https://s.shopee.co.th/a1"))
 				.andExpect(jsonPath("$.offers[1].shopType").value("PREFERRED"));
@@ -118,8 +118,8 @@ class PublicApiTest {
 	@Test
 	void productDetailHasPriceHistory() throws Exception {
 		upload(csv()
-				.item(1, "promo Dr.PONG Serum 15ml", "90", "Shop A", "Mall", "E001", "Dr.PONG Serum")
-				.item(2, "Dr.PONG Serum 16ml", "120", "Shop B", "ร้านแนะนำ", "E001", "Dr.PONG Serum"));
+				.item(1, "promo Dr.PONG Serum 15ml", "90", "Shop A", "E001", "Dr.PONG Serum")
+				.item(2, "Dr.PONG Serum 16ml", "120", "Shop B", "E001", "Dr.PONG Serum"));
 
 		mvc.perform(get("/api/products/{itemId}", 1))
 				.andExpect(status().isOk())
@@ -130,7 +130,7 @@ class PublicApiTest {
 	@Test
 	void linkFallsBackToProductUrlWhenNoAffiliateLink() throws Exception {
 		upload(baseCatalog().line(
-				"6,Dr.PONG Serum 20ml,130,0,Shop C,ทั่วไป,5%,฿1,https://shopee.co.th/product/77/6,,,E001,Dr.PONG Serum,ชื่ออังกฤษตรงกัน"));
+				"6,,Dr.PONG Serum 20ml,130,0,Shop C,5%,฿1,https://shopee.co.th/product/77/6,,E001,Dr.PONG Serum,,"));
 
 		mvc.perform(get("/api/products/{itemId}", 6))
 				.andExpect(jsonPath("$.product.link").value("https://shopee.co.th/product/77/6"));

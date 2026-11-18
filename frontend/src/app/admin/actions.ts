@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import {
+  confirmRuleGroup,
   discardInbox,
   importFile,
   importInbox,
@@ -76,6 +77,21 @@ export async function deactivateAction(_: ActionState, formData: FormData): Prom
   }
   refresh();
   return { ok: true, message: "บันทึกว่าเลิกขายแล้ว" };
+}
+
+/** Confirms one rule group: the ticked name groups ("merge") join it, and all its items pass review. */
+export async function confirmRuleGroupAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  const code = String(formData.get("code") ?? "");
+  if (!code) {
+    throw new Error("ไม่มีรหัสกลุ่ม R");
+  }
+  const merge = formData.getAll("merge").map(String);
+  const result = await confirmRuleGroup(code, merge);
+  if (!result.ok) {
+    return failure(result);
+  }
+  refresh();
+  return { ok: true, message: `ยืนยัน ${code} แล้ว: รวม ${merge.length} กลุ่ม` };
 }
 
 function fileNameOf(formData: FormData): string {

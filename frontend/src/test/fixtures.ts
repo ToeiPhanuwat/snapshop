@@ -1,5 +1,12 @@
 // Sample backend data for component tests: each builder returns a valid value and takes the fields a test cares about.
-import type { AdminProduct, FeedSyncRun, ImportPreview, ImportResult, Product } from "@/types/api";
+import type {
+  AdminProduct,
+  FeedSyncRun,
+  ImportPreview,
+  ImportResult,
+  Product,
+  RuleGroupReview,
+} from "@/types/api";
 
 export function feedRun(fields: Partial<FeedSyncRun> = {}): FeedSyncRun {
   return {
@@ -81,6 +88,38 @@ export function importPreview(fields: Partial<ImportPreview> = {}): ImportPrevie
     toHide: [],
     toReview: [],
     feedItemCount: 0,
+    newRuleTypes: [],
+    ruleReviewCount: 0,
+    autoPassedCount: 0,
+    ...fields,
+  };
+}
+
+/** Rule group R003 over two name groups: PT000011 holds a rule item and another item, PT000012 one rule item. */
+export function ruleGroup(fields: Partial<RuleGroupReview> = {}): RuleGroupReview {
+  return {
+    code: "PT000003",
+    name: "Calmmea B5 Aqua Gel",
+    pendingCount: 2,
+    nameGroups: [
+      {
+        code: "PT000011",
+        name: "Aqua Gel 10 g",
+        mergedIntoCode: null,
+        items: [
+          { itemId: 11, displayName: "Dr.PONG Aqua Gel 10 g", shopName: "Shop A", price: 100, status: "REVIEW", inRule: true },
+          { itemId: 15, displayName: "Dr.PONG Aqua Gel 10 g", shopName: "Shop B", price: 110, status: "OK", inRule: false },
+        ],
+      },
+      {
+        code: "PT000012",
+        name: "Aqua Gel x6",
+        mergedIntoCode: null,
+        items: [
+          { itemId: 13, displayName: "(x6) Dr.PONG Aqua Gel", shopName: "Shop C", price: null, status: "REVIEW", inRule: true },
+        ],
+      },
+    ],
     ...fields,
   };
 }

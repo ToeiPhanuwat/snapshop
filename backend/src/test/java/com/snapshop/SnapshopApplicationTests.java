@@ -28,8 +28,8 @@ class SnapshopApplicationTests {
 	void seed() {
 		jdbc.sql("TRUNCATE marketplace_product, product_type, import_batch RESTART IDENTITY CASCADE").update();
 		typeId = jdbc.sql("""
-				INSERT INTO product_type (category_code, type_name, type_name_norm, grouping_method)
-				VALUES ('DRPONG', 'Serum', 'serum', 'NO_MATCH') RETURNING product_type_id""").query(Long.class).single();
+				INSERT INTO product_type (category_code, kind, type_name, type_name_norm)
+				VALUES ('DRPONG', 'NAME', 'Serum', 'serum') RETURNING product_type_id""").query(Long.class).single();
 		batchId = jdbc.sql("""
 				INSERT INTO import_batch (category_code, source_files, row_count, inserted_count, price_changed_count,
 				  unchanged_count, not_in_latest_count, new_type_count)
@@ -45,23 +45,17 @@ class SnapshopApplicationTests {
 
 	@Test
 	void onlyOneActiveRowPerItem() {
-		insertProduct(111L, "Dr.X", "", "Dr.X", 'Y');
-		assertThatThrownBy(() -> insertProduct(111L, "Dr.X", "", "Dr.X", 'Y'))
+		insertProduct(111L, 'Y');
+		assertThatThrownBy(() -> insertProduct(111L, 'Y'))
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
-	@Test
-	void namePartsMustRebuildRawName() {
-		assertThatThrownBy(() -> insertProduct(222L, "Promo Dr.X", "Promo", "Dr.X", 'Y'))
-				.isInstanceOf(DataIntegrityViolationException.class);
-	}
-
-	private void insertProduct(long itemId, String raw, String prefix, String core, char flag) {
+	private void insertProduct(long itemId, char flag) {
 		jdbc.sql("""
-				INSERT INTO marketplace_product (item_id, shop_id, shop_name, shop_type, name_prefix, name_core, name_raw,
+				INSERT INTO marketplace_product (item_id, shop_id, shop_name, shop_type, name_prefix, name_core,
 				  product_type_id, price, product_url, status, active_flag, import_batch_id, last_seen_batch_id, last_seen_at)
-				VALUES (?, 1, 'shop', 'MALL', ?, ?, ?, ?, 100, 'https://shopee.co.th/product/1/1', 'OK', ?, ?, ?, now())""")
-				.params(itemId, prefix, core, raw, typeId, String.valueOf(flag), batchId, batchId).update();
+				VALUES (?, 1, 'shop', 'MALL', '', 'Dr.X', ?, 100, 'https://shopee.co.th/product/1/1', 'OK', ?, ?, ?, now())""")
+				.params(itemId, typeId, String.valueOf(flag), batchId, batchId).update();
 	}
 
 }

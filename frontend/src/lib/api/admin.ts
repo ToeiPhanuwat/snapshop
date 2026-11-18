@@ -11,6 +11,7 @@ import type {
   InboxFile,
   Page,
   ProductStatus,
+  RuleGroupReview,
 } from "@/types/api";
 import { query, request, type Result } from "./http";
 
@@ -66,6 +67,19 @@ export function moveProduct(itemId: number, productTypeCode: string): Promise<Re
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ productTypeCode }),
+  });
+}
+
+export function getRuleGroups(): Promise<RuleGroupReview[]> {
+  return adminGet("/api/admin/rule-groups");
+}
+
+/** Merges the ticked name groups into the rule group and passes its items; 409 says why it was refused. */
+export function confirmRuleGroup(code: string, mergeTypeCodes: string[]): Promise<Result<void>> {
+  return adminRequest(`/api/admin/rule-groups/${encodeURIComponent(code)}/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mergeTypeCodes }),
   });
 }
 

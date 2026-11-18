@@ -2,12 +2,14 @@
 import { headers } from "next/headers";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
+  confirmRuleGroup,
   discardInbox,
   getAdminProducts,
   getAdminTypes,
   getFeedSyncs,
   getInbox,
   getRecentImports,
+  getRuleGroups,
   importFile,
   importInbox,
   markDiscontinued,
@@ -85,6 +87,7 @@ describe("reads", () => {
     ["getRecentImports", getRecentImports, "/api/admin/imports"],
     ["getInbox", getInbox, "/api/admin/inbox"],
     ["getFeedSyncs", getFeedSyncs, "/api/admin/feed-syncs"],
+    ["getRuleGroups", getRuleGroups, "/api/admin/rule-groups"],
   ] as const)("%s returns what the backend lists", async (_, read, path) => {
     fetch.mockResolvedValue(json(200, [{ id: 1 }]));
     expect(await read()).toEqual([{ id: 1 }]);
@@ -112,6 +115,16 @@ describe("writes", () => {
     expect(call).toMatchObject({ url: "http://backend:8080/api/admin/imports", method: "POST" });
     expect(((call.body as FormData).get("file") as File).name).toBe("drpong.csv");
     expect(call.headers.get("Authorization")).toBe(adminLogin);
+  });
+
+  test("confirmRuleGroup sends the ticked name groups as JSON", async () => {
+    fetch.mockResolvedValue(new Response(null, { status: 204 }));
+    expect(await confirmRuleGroup("PT 3", ["PT000011"])).toEqual({ ok: true, data: undefined });
+    const call = backendCall();
+    expect(call).toMatchObject({ url: "http://backend:8080/api/admin/rule-groups/PT%203/confirm", method: "POST" });
+    expect(call.headers.get("Content-Type")).toBe("application/json");
+    expect(call.headers.get("Authorization")).toBe(adminLogin);
+    expect(JSON.parse(call.body as string)).toEqual({ mergeTypeCodes: ["PT000011"] });
   });
 
   test("moveProduct sends the new group as JSON", async () => {

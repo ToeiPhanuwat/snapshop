@@ -1,11 +1,9 @@
 package com.snapshop.service.importing;
 
-import com.snapshop.model.enums.GroupingMethod;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.csv.CSVRecord;
@@ -37,16 +35,15 @@ final class RecordReader {
 		Optional<String> name = required(Columns.NAME, "ชื่อสินค้าว่าง");
 		Optional<String> groupLabel = required(Columns.GROUP_LABEL, "รหัสกลุ่มว่าง");
 		Optional<String> groupName = required(Columns.GROUP_NAME, "ชื่อกลุ่มว่าง");
-		Optional<GroupingMethod> method = label(Columns.GROUPING_METHOD, "วิธีจัดกลุ่มไม่รู้จัก",
-				GroupingMethod::fromLabel);
+		Optional<RuleGroup> ruleGroup = ruleGroup();
 		if (errors.size() > errorsBefore) {
 			return Optional.empty();
 		}
 		return Optional.of(new ImportRow(line, itemId.orElseThrow(), shopId.orElseThrow(), shopName.orElseThrow(),
-				ProductName.of(name.orElseThrow()), amount(Columns.PRICE),
+				new ProductName(get(Columns.NAME_PREFIX).strip(), name.orElseThrow()), amount(Columns.PRICE),
 				optional(Columns.SOLD), amount(Columns.COMMISSION_RATE), amount(Columns.COMMISSION),
 				get(Columns.PRODUCT_URL).strip(), optional(Columns.AFFILIATE_URL),
-				groupLabel.orElseThrow(), groupName.orElseThrow(), method.orElseThrow()));
+				groupLabel.orElseThrow(), groupName.orElseThrow(), ruleGroup.orElse(null)));
 	}
 
 	private Optional<Long> itemId() {
@@ -74,13 +71,14 @@ final class RecordReader {
 		return Optional.of(Long.parseLong(m.group(1)));
 	}
 
-	private <E> Optional<E> label(String column, String message, Function<String, Optional<E>> lookup) {
-		String text = get(column);
-		Optional<E> found = lookup.apply(text);
-		if (found.isEmpty()) {
-			error(message + " '" + text + "'");
+	/** Both columns blank means no rule group; one blank and one filled is an error. */
+	private Optional<RuleGroup> ruleGroup() {
+		String label = get(Columns.RULE_GROUP_LABEL).strip();
+		String name = get(Columns.RULE_GROUP_NAME).strip();
+		if (label.isEmpty() != name.isEmpty()) {
+			error("รหัสกลุ่มตามกฎกับชื่อกลุ่มตามกฎต้องมีทั้งคู่หรือว่างทั้งคู่");
 		}
-		return found;
+		return label.isEmpty() || name.isEmpty() ? Optional.empty() : Optional.of(new RuleGroup(label, name));
 	}
 
 	private Optional<String> required(String column, String message) {

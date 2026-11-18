@@ -50,11 +50,13 @@ public class MarketplaceProduct {
 	@Column(name = "name_core", nullable = false, updatable = false)
 	private String nameCore;
 
-	@Column(name = "name_raw", nullable = false, updatable = false)
-	private String nameRaw;
-
+	/** Name group (กลุ่ม E). */
 	@Column(name = "product_type_id", nullable = false)
 	private long productTypeId;
+
+	/** Rule group (กลุ่ม R); null when the item has none. */
+	@Column(name = "rule_type_id")
+	private Long ruleTypeId;
 
 	@Column(name = "price")
 	private BigDecimal price;
@@ -124,14 +126,15 @@ public class MarketplaceProduct {
 	}
 
 	/** A new current version, first seen in import batch {@code batchId}. */
-	public MarketplaceProduct(Listing listing, long productTypeId, ProductStatus status, long batchId, Instant now) {
+	public MarketplaceProduct(Listing listing, long productTypeId, Long ruleTypeId, ProductStatus status, long batchId,
+			Instant now) {
+		this.ruleTypeId = ruleTypeId;
 		this.itemId = listing.itemId();
 		this.shopId = listing.shopId();
 		this.shopName = listing.shopName();
 		this.shopType = ShopType.REGULAR;
 		this.namePrefix = listing.namePrefix();
 		this.nameCore = listing.nameCore();
-		this.nameRaw = listing.namePrefix() + listing.nameCore();
 		this.price = listing.price();
 		this.soldText = listing.soldText();
 		this.commissionRate = listing.commissionRate();
@@ -187,8 +190,8 @@ public class MarketplaceProduct {
 		next.shopType = shopType;
 		next.namePrefix = namePrefix;
 		next.nameCore = nameCore;
-		next.nameRaw = nameRaw;
 		next.productTypeId = productTypeId;
+		next.ruleTypeId = ruleTypeId;
 		next.price = newPrice;
 		next.soldText = soldText;
 		next.commissionRate = commissionRate;
@@ -226,15 +229,12 @@ public class MarketplaceProduct {
 		this.deactivatedAt = now;
 	}
 
-	/** Admin checked the item. An item without a known price cannot be shown, so it stays in REVIEW. */
-	public void resolveReview() {
+	/** Admin checked the item. Without a known price it waits for the feed instead of showing. */
+	public void passReview() {
 		if (status != ProductStatus.REVIEW) {
 			throw new BusinessRuleException("สินค้า " + itemId + " ไม่ได้อยู่ในสถานะ REVIEW");
 		}
-		if (price == null) {
-			throw new BusinessRuleException("สินค้า " + itemId + " ยังไม่มีราคา รอนำเข้ารอบที่มีราคาเต็ม");
-		}
-		this.status = ProductStatus.OK;
+		this.status = price == null ? ProductStatus.PRICE_PENDING : ProductStatus.OK;
 	}
 
 	public void moveTo(long newProductTypeId) {
@@ -269,12 +269,12 @@ public class MarketplaceProduct {
 		return nameCore;
 	}
 
-	public String getNameRaw() {
-		return nameRaw;
-	}
-
 	public long getProductTypeId() {
 		return productTypeId;
+	}
+
+	public Long getRuleTypeId() {
+		return ruleTypeId;
 	}
 
 	public BigDecimal getPrice() {

@@ -7,22 +7,13 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class ProductNameTest {
 
-	@ParameterizedTest(name = "[{index}] {0}")
+	@ParameterizedTest(name = "[{index}] {0}|{1}")
 	@CsvSource(delimiter = '|', value = {
-			"Dr.PONG serum                       | ''                     | Dr.PONG serum",
-			"[ส่งฟรี] Dr.PONG serum             | '[ส่งฟรี] '            | Dr.PONG serum",
-			"**Dr.PONG All Serum                 | **                     | Dr.PONG All Serum",
-			"> English:Dr.PONG All Serum         | > English:             | Dr.PONG All Serum",
-			"ยาสีฟัน Dr.kiss white dr.pong       | 'ยาสีฟัน '             | Dr.kiss white dr.pong",
-			"promo DR. PONG                      | 'promo '               | DR. PONG",
-			"[กด 1 ฟรี 1] 28D ESSENCE            | ''                     | [กด 1 ฟรี 1] 28D ESSENCE",
+			"''        | Dr.PONG serum | Dr.PONG serum",
+			"(1ซอง)    | Dr.PONG serum | (1ซอง) Dr.PONG serum",
 	})
-	void splitsAtFirstDrIgnoringCase(String raw, String prefix, String core) {
-		ProductName name = ProductName.of(raw);
-
-		assertThat(name.prefix()).isEqualTo(prefix);
-		assertThat(name.core()).isEqualTo(core);
-		assertThat(name.raw()).isEqualTo(raw);
+	void fullNameJoinsPrefixAndCoreWithOneSpace(String prefix, String core, String full) {
+		assertThat(new ProductName(prefix, core).raw()).isEqualTo(full);
 	}
 
 }

@@ -74,19 +74,22 @@ class AdminInboxControllerTest {
 		mvc.perform(get("/api/admin/inbox/{name}/preview", "drpong.csv").with(ADMIN))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.fileName").value("drpong.csv"))
-				.andExpect(jsonPath("$.rowCount").value(192))
-				.andExpect(jsonPath("$.insertedCount").value(192))
-				.andExpect(jsonPath("$.newTypeCount").value(122))
-				.andExpect(jsonPath("$.newTypes.length()").value(122))
-				.andExpect(jsonPath("$.toReview.length()").value(0))
-				.andExpect(jsonPath("$.feedItemCount").value(192));
+				.andExpect(jsonPath("$.rowCount").value(431))
+				.andExpect(jsonPath("$.insertedCount").value(431))
+				.andExpect(jsonPath("$.newTypeCount").value(205))
+				.andExpect(jsonPath("$.newTypes.length()").value(205))
+				.andExpect(jsonPath("$.newRuleTypes.length()").value(16))
+				.andExpect(jsonPath("$.toReview.length()").value(89))
+				.andExpect(jsonPath("$.ruleReviewCount").value(89))
+				.andExpect(jsonPath("$.autoPassedCount").value(7))
+				.andExpect(jsonPath("$.feedItemCount").value(431));
 		assertThat(count("SELECT count(*) FROM marketplace_product") + count("SELECT count(*) FROM import_batch"))
 				.isZero();
 
 		mvc.perform(post("/api/admin/inbox/{name}/import", "drpong.csv").with(ADMIN))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.insertedCount").value(192))
-				.andExpect(jsonPath("$.newTypeCount").value(122));
+				.andExpect(jsonPath("$.insertedCount").value(431))
+				.andExpect(jsonPath("$.newTypeCount").value(205));
 	}
 
 	@Test

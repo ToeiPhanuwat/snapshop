@@ -5,11 +5,13 @@ import com.snapshop.dto.request.TypeSearchRequest;
 import com.snapshop.dto.response.AdminProductResponse;
 import com.snapshop.dto.response.AdminProductTypeResponse;
 import com.snapshop.dto.response.PageResponse;
+import com.snapshop.exception.BusinessRuleException;
 import com.snapshop.exception.NotFoundException;
 import com.snapshop.model.entity.MarketplaceProduct;
 import com.snapshop.model.entity.ProductType;
 import com.snapshop.model.enums.ActiveFlag;
 import com.snapshop.model.enums.DeactivationReason;
+import com.snapshop.model.enums.TypeKind;
 import com.snapshop.repository.MarketplaceProductRepository;
 import com.snapshop.repository.ProductQueryRepository;
 import com.snapshop.repository.ProductTypeRepository;
@@ -44,7 +46,7 @@ public class AdminProductService {
 	}
 
 	public AdminProductResponse resolveReview(long itemId) {
-		current(itemId).resolveReview();
+		current(itemId).passReview();
 		return reload(itemId);
 	}
 
@@ -53,6 +55,9 @@ public class AdminProductService {
 		current(itemId);
 		ProductType target = types.findByCode(productTypeCode)
 				.orElseThrow(() -> new NotFoundException("ไม่พบกลุ่มสินค้า " + productTypeCode));
+		if (target.getKind() != TypeKind.NAME) {
+			throw new BusinessRuleException("ย้ายเข้ากลุ่ม R ไม่ได้ ใช้หน้า REVIEW กลุ่ม R เพื่อรวมกลุ่ม");
+		}
 		products.findByItemIdOrderByIdDesc(itemId).forEach(p -> p.moveTo(target.getId()));
 		return reload(itemId);
 	}

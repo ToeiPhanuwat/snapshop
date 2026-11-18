@@ -52,18 +52,17 @@ class AdminProductApiTest {
 				.andExpect(jsonPath("$.items[0].name").value("Cream"))
 				.andExpect(jsonPath("$.items[0].activeCount").value(1))
 				.andExpect(jsonPath("$.items[0].visibleCount").value(1))
-				.andExpect(jsonPath("$.items[0].onUserSite").value(false))
-				.andExpect(jsonPath("$.items[0].groupingMethod").value("ENGLISH_NAME_MATCH"));
+				.andExpect(jsonPath("$.items[0].onUserSite").value(false));
 	}
 
 	@Test
 	void resolvingConflictReviewPutsNewShopOnUserSite() throws Exception {
 		// file group X001 mixes Serum item 1 and Cream item 3: new item 7 joins one of them and needs review
 		mvc.perform(multipart("/api/admin/imports").file(csv()
-				.item(1, "promo Dr.PONG Serum 15ml", "100", "Shop A", "Mall", "X001", "Dr.PONG Serum")
-				.item(2, "Dr.PONG Serum 16ml", "120", "Shop B", "ร้านแนะนำ", "E001", "Dr.PONG Serum")
+				.item(1, "promo Dr.PONG Serum 15ml", "100", "Shop A", "X001", "Dr.PONG Serum")
+				.item(2, "Dr.PONG Serum 16ml", "120", "Shop B", "E001", "Dr.PONG Serum")
 				.item(3, "50", "X001", "Cream")
-				.item(7, "Dr.PONG Serum 30ml", "150", "Shop G", "ทั่วไป", "X001", "Dr.PONG Serum")
+				.item(7, "Dr.PONG Serum 30ml", "150", "Shop G", "X001", "Dr.PONG Serum")
 				.file()).with(ADMIN));
 		mvc.perform(get("/api/admin/products").param("status", "REVIEW").with(ADMIN))
 				.andExpect(jsonPath("$.items[*].itemId", contains(7)));
@@ -77,7 +76,7 @@ class AdminProductApiTest {
 	}
 
 	@Test
-	void resolvingIsRefusedWhenNotInReviewOrPriceStillUnknown() throws Exception {
+	void resolvingIsRefusedWhenNotInReview() throws Exception {
 		mvc.perform(post("/api/admin/products/{itemId}/resolve", 1).with(ADMIN)).andExpect(status().isConflict());
 		mvc.perform(post("/api/admin/products/{itemId}/resolve", 5).with(ADMIN)).andExpect(status().isConflict());
 	}

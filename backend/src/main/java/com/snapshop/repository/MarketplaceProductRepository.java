@@ -25,7 +25,26 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
 			order by p.id""")
 	List<ItemType> findItemTypesInCategory(@Param("category") String category);
 
+	/** Rule group of every version of every item in the category that has one, oldest version first. */
+	@Query("""
+			select new com.snapshop.repository.ItemType(p.itemId, p.ruleTypeId) from MarketplaceProduct p
+			where p.ruleTypeId is not null
+			  and p.productTypeId in (select t.id from ProductType t where t.categoryCode = :category)
+			order by p.id""")
+	List<ItemType> findItemRuleTypesInCategory(@Param("category") String category);
+
 	List<MarketplaceProduct> findByItemIdInAndActiveFlag(Collection<Long> itemIds, ActiveFlag activeFlag);
+
+	/** Rule groups that still have current items in the given status. */
+	@Query("""
+			select distinct p.ruleTypeId from MarketplaceProduct p
+			where p.activeFlag = :flag and p.status = :status and p.ruleTypeId is not null""")
+	List<Long> findRuleTypeIdsWithStatus(@Param("flag") ActiveFlag flag, @Param("status") ProductStatus status);
+
+	List<MarketplaceProduct> findByRuleTypeIdAndActiveFlag(long ruleTypeId, ActiveFlag activeFlag);
+
+	List<MarketplaceProduct> findByProductTypeIdInAndActiveFlagOrderByItemId(Collection<Long> productTypeIds,
+			ActiveFlag activeFlag);
 
 	/** Current items the feed still has to supply: waiting for a price, or never looked up. */
 	@Query("""

@@ -15,6 +15,8 @@ describe("ImportPreviewView", () => {
           notInLatestCount: 7,
           newTypeCount: 2,
           feedItemCount: 15,
+          ruleReviewCount: 89,
+          autoPassedCount: 7,
         })}
       />,
     );
@@ -26,13 +28,15 @@ describe("ImportPreviewView", () => {
       "7",
       "2",
       "15",
+      "89",
+      "7",
     ]);
   });
 
   test("says a section is empty", () => {
     render(<ImportPreviewView preview={importPreview()} />);
     expect(screen.getByText("ราคาเปลี่ยน (0)")).toBeInTheDocument();
-    expect(screen.getAllByText("ไม่มี")).toHaveLength(4);
+    expect(screen.getAllByText("ไม่มี")).toHaveLength(5);
   });
 
   test("shows the old and the new price of each changed item", () => {
@@ -60,6 +64,7 @@ describe("ImportPreviewView", () => {
           toHide: [{ itemId: 2001, name: "Old cream" }],
           toReview: [{ itemId: 3001, name: "New toner" }],
           newTypes: ["Toner 100ml"],
+          newRuleTypes: ["Calmmea B5 Aqua Gel"],
         })}
       />,
     );
@@ -67,6 +72,8 @@ describe("ImportPreviewView", () => {
     expect(screen.getByText(/Old cream/).closest("li")).toHaveTextContent("2001 Old cream");
     expect(screen.getByText(/New toner/).closest("li")).toHaveTextContent("3001 New toner");
     expect(screen.getByText("Toner 100ml")).toBeInTheDocument();
+    expect(screen.getByText("กลุ่ม R ใหม่ (1)")).toBeInTheDocument();
+    expect(screen.getByText("Calmmea B5 Aqua Gel").tagName).toBe("LI");
   });
 
   test("opens sections of up to 20 lines and keeps longer or empty ones closed", () => {
