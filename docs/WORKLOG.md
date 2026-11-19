@@ -225,3 +225,4 @@
 - ขั้น 3 redirect: `ProductQueryService.type` ตอบด้วยกลุ่ม R ถ้ารหัสเป็นกลุ่ม E ที่ถูกรวม (เทสต์ล้มด้วย 404 ก่อนแก้); หน้า `/types/[code]` เรียก `redirect` (307 ชั่วคราว เผื่อยกเลิกการรวมในอนาคต)
 - เทสต์ที่ตัวเลขเปลี่ยนตามกฎ: ไฟล์จริง REVIEW 89 → 45, ผ่านอัตโนมัติ 7 → 51, OK 313 → 355, PRICE_PENDING 29 → 31; `storedItemKeepsItsRuleGroup…` เพิ่มรายการที่สองในกลุ่ม E เพื่อให้เทสต์ยังวัดเรื่องเดิม (กลุ่ม R ไม่เปลี่ยน) ไม่ผูกกับสถานะ REVIEW
 - E2E: ไฟล์ตัวอย่างเพิ่ม 4 แถว (กลุ่ม R "E2E Toner" ครอบกลุ่ม E 2 กลุ่ม กลุ่มละ 2 รายการ) → ตัวเลขใน `admin-import`/`admin-inbox` เป็น 15 แถว / กลุ่มใหม่ 8; เพิ่มเทสต์ส่วน "ยุบรวมได้" + ลิงก์เดิม redirect ไม่แตะกลุ่ม Sunscreen/Serum เพราะ `public.spec.ts` ใช้อยู่
+- E2E: ปิด stack dev (next dev, `mvn spring-boot:run`, `docker compose stop db` — ไม่ลบ volume) ตามที่ผู้ใช้อนุญาต แล้ว `e2e:down && e2e:up && e2e` บน DB ว่าง → 21/21 ผ่าน

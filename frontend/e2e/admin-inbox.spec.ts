@@ -24,7 +24,7 @@ test("the admin previews a file, imports it and comes back to the inbox", async 
   await page.getByRole("listitem").filter({ hasText: "e2e-again.csv" }).getByRole("link", { name: "ดูพรีวิว" }).click();
 
   await expect(page.getByRole("heading", { name: "e2e-again.csv" })).toBeVisible();
-  await expect(page.getByText("แถวในไฟล์").locator("+ dd")).toHaveText("11");
+  await expect(page.getByText("แถวในไฟล์").locator("+ dd")).toHaveText("15");
   await expect(page.getByText("รอ REVIEW กลุ่ม R").locator("+ dd")).toHaveText("0");
   await page.getByRole("button", { name: "นำเข้าไฟล์นี้" }).click();
 

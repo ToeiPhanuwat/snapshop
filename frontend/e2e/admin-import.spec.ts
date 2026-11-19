@@ -26,9 +26,9 @@ test("the admin imports the sample file and sees what changed", async ({ page })
 
   await expect(page.getByRole("status")).toHaveText("นำเข้าสำเร็จ");
   const counts = page.locator("form dl");
-  await expect(counts.getByText("แถวในไฟล์").locator("+ dd")).toHaveText("11");
-  await expect(counts.getByText("รายการใหม่").locator("+ dd")).toHaveText("11");
-  await expect(counts.getByText("กลุ่มใหม่").locator("+ dd")).toHaveText("6");
+  await expect(counts.getByText("แถวในไฟล์").locator("+ dd")).toHaveText("15");
+  await expect(counts.getByText("รายการใหม่").locator("+ dd")).toHaveText("15");
+  await expect(counts.getByText("กลุ่มใหม่").locator("+ dd")).toHaveText("8");
   await expect(button).toBeEnabled();
   await expect(page.getByRole("cell", { name: "e2e-import.csv" })).toBeVisible();
 });
