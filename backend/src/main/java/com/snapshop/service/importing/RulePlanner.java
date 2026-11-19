@@ -1,8 +1,7 @@
 package com.snapshop.service.importing;
 
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toSet;
 
 import com.snapshop.service.importing.ImportPlan.NewType;
 import com.snapshop.service.importing.TypeRef.Created;
@@ -12,28 +11,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
 
 /**
  * Rule-group ("กลุ่ม R") decisions for one import, part of {@link ImportPlanner}.
  *
  * <ul>
  * <li>A stored item keeps the rule group it has, whatever the file says, and is never reviewed again.</li>
- * <li>A new item joins the rule group with the same normalized name, or a new one.</li>
- * <li>A new item in a rule group waits for review, unless its rule group holds exactly the items of its name group
- * in the file: then both rules agree and it passes automatically.</li>
+ * <li>A new item joins the rule group with the same normalized name, or a new one. Joining a stored rule group
+ * reopens it for the admin.</li>
+ * <li>A new item in a rule group passes automatically when its name group holds at least
+ * {@value #SHOWS_ON_ITS_OWN} rows in the file, since that name group shows on the site on its own; otherwise it waits
+ * for the admin to merge it.</li>
  * </ul>
  */
 final class RulePlanner {
 
+	/** Rows a name group needs to show on the site by itself, as in the view {@code public_product}. */
+	static final int SHOWS_ON_ITS_OWN = 2;
+
 	private final CurrentState state;
-	private final Set<Long> agreeingItems;
+	private final Map<String, Long> rowsByNameGroup;
 	private final Map<String, NewType> newRuleTypes = new LinkedHashMap<>();
 	private final Set<Long> autoPassed = new TreeSet<>();
+	private final Set<Long> reopened = new TreeSet<>();
 
 	RulePlanner(List<ImportRow> rows, CurrentState state) {
 		this.state = state;
-		this.agreeingItems = agreeingItems(rows);
+		this.rowsByNameGroup = rows.stream().collect(groupingBy(ImportRow::fileGroupLabel, counting()));
 	}
 
 	/** The rule group of the row's item; null when it has none. */
@@ -48,6 +52,7 @@ final class RulePlanner {
 		String normName = TypeNames.normalize(row.ruleGroup().name());
 		Long byName = state.ruleTypeByNormName().get(normName);
 		if (byName != null) {
+			reopened.add(byName);
 			return new Existing(byName);
 		}
 		newRuleTypes.putIfAbsent(normName, new NewType(normName, row.ruleGroup().name()));
@@ -58,7 +63,7 @@ final class RulePlanner {
 		if (known || row.ruleGroup() == null) {
 			return false;
 		}
-		if (agreeingItems.contains(row.itemId())) {
+		if (rowsByNameGroup.get(row.fileGroupLabel()) >= SHOWS_ON_ITS_OWN) {
 			autoPassed.add(row.itemId());
 			return false;
 		}
@@ -73,19 +78,9 @@ final class RulePlanner {
 		return List.copyOf(autoPassed);
 	}
 
-	/** Items whose rule group in the file has exactly the same items as their name group in the file. */
-	private static Set<Long> agreeingItems(List<ImportRow> rows) {
-		List<ImportRow> ruleRows = rows.stream().filter(r -> r.ruleGroup() != null).toList();
-		Map<String, Set<Long>> byName = members(rows, ImportRow::fileGroupLabel);
-		Map<String, Set<Long>> byRule = members(ruleRows, r -> r.ruleGroup().label());
-		return ruleRows.stream()
-				.filter(r -> byRule.get(r.ruleGroup().label()).equals(byName.get(r.fileGroupLabel())))
-				.map(ImportRow::itemId)
-				.collect(toSet());
-	}
-
-	private static Map<String, Set<Long>> members(List<ImportRow> rows, Function<ImportRow, String> label) {
-		return rows.stream().collect(groupingBy(label, mapping(ImportRow::itemId, toSet())));
+	/** Stored rule groups a new item joins; the admin should look at them again. */
+	List<Long> reopened() {
+		return List.copyOf(reopened);
 	}
 
 }

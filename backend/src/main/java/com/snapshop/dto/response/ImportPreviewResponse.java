@@ -13,7 +13,7 @@ import java.util.List;
  * @param toReview     items that would be in REVIEW after the import
  * @param feedItemCount items the system will look up in the feed once the import is done
  * @param ruleReviewCount new items in a rule group that will wait for review
- * @param autoPassedCount new items in a rule group that pass because their rule and name groups agree
+ * @param autoPassedCount new items in a rule group that pass because their name group shows on its own
  */
 public record ImportPreviewResponse(
 		String fileName,

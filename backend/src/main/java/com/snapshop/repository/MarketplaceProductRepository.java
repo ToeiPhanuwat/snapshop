@@ -41,6 +41,14 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
 			where p.activeFlag = :flag and p.status = :status and p.ruleTypeId is not null""")
 	List<Long> findRuleTypeIdsWithStatus(@Param("flag") ActiveFlag flag, @Param("status") ProductStatus status);
 
+	/** Rule groups the admin has not confirmed whose current items sit in two name groups or more. */
+	@Query("""
+			select p.ruleTypeId from MarketplaceProduct p, ProductType r
+			where r.id = p.ruleTypeId and r.mergeReviewedAt is null and p.activeFlag = :flag
+			group by p.ruleTypeId
+			having count(distinct p.productTypeId) >= 2""")
+	List<Long> findUnconfirmedRuleTypeIdsSpanningNameGroups(@Param("flag") ActiveFlag flag);
+
 	List<MarketplaceProduct> findByRuleTypeIdAndActiveFlag(long ruleTypeId, ActiveFlag activeFlag);
 
 	List<MarketplaceProduct> findByProductTypeIdInAndActiveFlagOrderByItemId(Collection<Long> productTypeIds,

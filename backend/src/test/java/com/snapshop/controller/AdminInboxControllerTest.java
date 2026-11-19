@@ -79,9 +79,9 @@ class AdminInboxControllerTest {
 				.andExpect(jsonPath("$.newTypeCount").value(205))
 				.andExpect(jsonPath("$.newTypes.length()").value(205))
 				.andExpect(jsonPath("$.newRuleTypes.length()").value(16))
-				.andExpect(jsonPath("$.toReview.length()").value(89))
-				.andExpect(jsonPath("$.ruleReviewCount").value(89))
-				.andExpect(jsonPath("$.autoPassedCount").value(7))
+				.andExpect(jsonPath("$.toReview.length()").value(45))
+				.andExpect(jsonPath("$.ruleReviewCount").value(45))
+				.andExpect(jsonPath("$.autoPassedCount").value(51))
 				.andExpect(jsonPath("$.feedItemCount").value(431));
 		assertThat(count("SELECT count(*) FROM marketplace_product") + count("SELECT count(*) FROM import_batch"))
 				.isZero();

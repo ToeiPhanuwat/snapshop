@@ -228,15 +228,26 @@ class ImportPlannerTest {
 	// ---- rule groups (กลุ่ม R) ----
 
 	@Test
-	void newItemsInRuleGroupSpanningNameGroupsWaitForReview() {
+	void ruleItemsPassWhenTheirNameGroupCanShowOnItsOwnAndLoneItemsWaitForReview() {
 		ImportPlan plan = plan(rule(1, "E001", "Serum A", 100, "R001", "Serum"),
 				rule(2, "E001", "Serum A", 120, "R001", "Serum"), rule(3, "E002", "Serum B", 90, "R001", "Serum"));
 
 		assertThat(plan.newRuleTypes()).containsExactly(new NewType("serum", "Serum"));
 		assertThat(plan.newVersions()).extracting(NewVersion::ruleType).containsOnly(new Created("serum"));
+		assertThat(plan.newVersions()).extracting(NewVersion::status)
+				.containsExactly(ProductStatus.OK, ProductStatus.OK, ProductStatus.REVIEW);
+		assertThat(plan.autoPassedItemIds()).containsExactly(1L, 2L);
+		assertThat(plan.ruleReviewCount()).isEqualTo(1);
+	}
+
+	@Test
+	void ruleGroupOfLoneNameGroupsWaitsForReviewWhole() {
+		ImportPlan plan = plan(rule(1, "E001", "Serum A", 100, "R001", "Serum"),
+				rule(2, "E002", "Serum B", 90, "R001", "Serum"));
+
 		assertThat(plan.newVersions()).extracting(NewVersion::status).containsOnly(ProductStatus.REVIEW);
 		assertThat(plan.autoPassedItemIds()).isEmpty();
-		assertThat(plan.ruleReviewCount()).isEqualTo(3);
+		assertThat(plan.ruleReviewCount()).isEqualTo(2);
 	}
 
 	@Test
@@ -260,13 +271,14 @@ class ImportPlannerTest {
 	}
 
 	@Test
-	void ruleGroupInsideLargerNameGroupNeedsReviewOnlyForItsItems() {
-		ImportPlan plan = plan(rule(1, "E001", "Serum", 100, "R001", "Sachet"),
-				rule(2, "E001", "Serum", 120, "R001", "Sachet"), row(3, "E001", "Serum", 300));
+	void ruleItemInNameGroupWithItemsOutsideTheRuleStillPasses() {
+		ImportPlan plan = plan(rule(1, "E001", "Serum", 100, "R001", "Sachet"), row(2, "E001", "Serum", 300),
+				rule(3, "E002", "Serum x6", 500, "R001", "Sachet"));
 
 		assertThat(plan.newVersions()).extracting(NewVersion::status)
-				.containsExactly(ProductStatus.REVIEW, ProductStatus.REVIEW, ProductStatus.OK);
-		assertThat(plan.newVersions().get(2).ruleType()).isNull();
+				.containsExactly(ProductStatus.OK, ProductStatus.OK, ProductStatus.REVIEW);
+		assertThat(plan.newVersions().get(1).ruleType()).isNull();
+		assertThat(plan.autoPassedItemIds()).containsExactly(1L);
 	}
 
 	@Test
@@ -278,6 +290,16 @@ class ImportPlannerTest {
 
 		assertThat(plan.newRuleTypes()).isEmpty();
 		assertThat(plan.newVersions()).extracting(NewVersion::ruleType).containsOnly(new Existing(50));
+		assertThat(plan.reopenedRuleTypeIds()).containsExactly(50L);
+	}
+
+	@Test
+	void storedItemsAloneDoNotReopenTheirRuleGroup() {
+		state.active(1, 10, 100).rule(1, 50).ruleType("serum", 50);
+
+		ImportPlan plan = plan(rule(1, "E001", "S", 100, "R001", "Serum"), row(2, "E001", "S", 90));
+
+		assertThat(plan.reopenedRuleTypeIds()).isEmpty();
 	}
 
 	@Test

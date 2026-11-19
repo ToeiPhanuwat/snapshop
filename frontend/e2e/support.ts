@@ -2,8 +2,9 @@ import { copyFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 /**
- * The sample file every run imports: six name groups, one price written as "1.0พัน", one item without a pair,
- * a rule group spread over two name groups (waits for review) and one that equals its name group (passes).
+ * The sample file every run imports: eight name groups, one price written as "1.0พัน", one item without a pair,
+ * a rule group over two one-item name groups (waits for review), one that equals its name group (passes) and one
+ * over two name groups of two items each (passes, and can still be merged).
  */
 export const sampleFile = path.join(__dirname, "fixtures", "e2e-import.csv");
 
@@ -16,6 +17,10 @@ export const AQUA_GEL_SMALL = "Dr.PONG E2E Aqua Gel 10 g";
 export const AQUA_GEL_BOX = "Dr.PONG E2E Aqua Gel x6";
 /** Name group whose items are exactly the rule group "E2E CoQ10". */
 export const COQ10 = "Dr.PONG E2E CoQ10 30 mg";
+/** Rule group over the name groups TONER_SMALL and TONER_BIG, which both show on their own. */
+export const TONER = "E2E Toner";
+export const TONER_SMALL = "Dr.PONG E2E Toner 100 ml";
+export const TONER_BIG = "Dr.PONG E2E Toner 200 ml";
 
 /** The test stack's admin login from .env.test, for `test.use({ httpCredentials: adminLogin() })`. */
 export function adminLogin(): { username: string; password: string } {

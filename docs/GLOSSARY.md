@@ -9,9 +9,11 @@
 | เลิกขาย | admin ตรวจแล้วว่ารายการเลิกขายจริง | `active_flag = 'N'`, `deactivation_reason = DISCONTINUED` |
 | กลุ่ม | รายการสินค้าชนิดเดียวกันจากหลายร้าน ใช้เปรียบเทียบราคา มี 2 ชนิด: กลุ่ม E และกลุ่ม R | `product_type` |
 | กลุ่ม E | กลุ่มตามชื่ออังกฤษตรงกัน ทุกรายการมีหนึ่งกลุ่ม | `product_type.kind = NAME`, `marketplace_product.product_type_id` |
-| กลุ่ม R | กลุ่มตามกฎคำระบุสูตร บางรายการมี; รายการใหม่ในกลุ่ม R ต้องผ่าน REVIEW ก่อนขึ้นเว็บ | `product_type.kind = RULE`, `marketplace_product.rule_type_id` |
-| ผ่านอัตโนมัติ | รายการใหม่ในกลุ่ม R ที่กลุ่ม R ในไฟล์มีสมาชิกเท่ากับกลุ่ม E หนึ่งกลุ่มพอดี จึงไม่ต้อง REVIEW | `RulePlanner`, `ImportPlan.autoPassedItemIds` |
+| กลุ่ม R | กลุ่มตามกฎคำระบุสูตร บางรายการมี; รายการใหม่ในกลุ่ม R ที่กลุ่ม E มีรายการเดียวต้องผ่าน REVIEW ก่อนขึ้นเว็บ | `product_type.kind = RULE`, `marketplace_product.rule_type_id` |
+| ผ่านอัตโนมัติ | รายการใหม่ในกลุ่ม R ที่กลุ่ม E ของมันในไฟล์มี ≥ 2 แถว (ขึ้นเว็บเองได้) จึงไม่ต้อง REVIEW | `RulePlanner`, `ImportPlan.autoPassedItemIds` |
 | รวมกลุ่ม | admin ยืนยันกลุ่ม R แล้วกลุ่ม E ที่ติ๊กเข้าไปอยู่ใต้กลุ่ม R ทั้งกลุ่ม | `product_type.merged_into_type_id`, `RuleGroupReviewService` |
+| ยุบรวมได้ | กลุ่ม R ที่ยังไม่ยืนยัน ไม่มีรายการรอ แต่สมาชิกอยู่ในกลุ่ม E ≥ 2 กลุ่ม admin รวมกลุ่ม E เข้าไปได้ | `RuleGroupReviewService.pending`, `RuleGroupSections` |
+| ยืนยันแล้ว (กลุ่ม R) | admin กดยืนยันกลุ่ม R แล้ว หายจากหน้า REVIEW จนกว่ามีรายการใหม่เข้ากลุ่ม | `product_type.merge_reviewed_at` |
 | กลุ่มที่แสดง | กลุ่มที่เว็บใช้จัดรายการ: กลุ่ม R ที่กลุ่ม E ถูกรวมเข้าไป ไม่เช่นนั้นกลุ่ม E | `public_product.display_type_id` |
 | รหัสกลุ่ม | รหัสที่ระบบสร้าง เช่น `PT000001` ไม่เปลี่ยนตลอดอายุกลุ่ม | `product_type_code` |
 | ป้ายกลุ่มในไฟล์ | รหัสกลุ่มในไฟล์ (E001 ของกลุ่ม E, R001 ของกลุ่ม R) ใช้บอกว่าแถวไหนอยู่ด้วยกัน**เฉพาะในไฟล์นั้น** ระบบไม่เก็บ | `ImportRow.fileGroupLabel`, `RuleGroup.label` |
