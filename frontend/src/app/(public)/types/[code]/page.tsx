@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PriceTable } from "@/components/product/PriceTable";
 import { getProductType } from "@/lib/api/public";
@@ -23,6 +23,10 @@ async function TypeOffers({ params }: Pick<PageProps<"/types/[code]">, "params">
   const type = await getProductType(code);
   if (!type) {
     notFound();
+  }
+  if (type.code !== code) {
+    // กลุ่ม E ที่ถูกรวมเข้ากลุ่ม R: ลิงก์เดิมพาไปหน้ากลุ่ม R (ชั่วคราว เผื่อยกเลิกการรวมในอนาคต)
+    redirect(`/types/${type.code}`);
   }
   return (
     <>

@@ -44,7 +44,7 @@ class AdminImportControllerTest {
 				.andExpect(jsonPath("$.priceChangedCount").value(0));
 
 		assertThat(statusCounts()).containsExactlyInAnyOrderEntriesOf(
-				Map.of("OK", 313L, "REVIEW", 89L, "PRICE_PENDING", 29L));
+				Map.of("OK", 355L, "REVIEW", 45L, "PRICE_PENDING", 31L));
 		assertThat(count("SELECT count(*) FROM marketplace_product WHERE name_prefix <> ''")).isEqualTo(281);
 		assertThat(count("SELECT count(*) FROM marketplace_product WHERE rule_type_id IS NOT NULL")).isEqualTo(96);
 		assertThat(count("SELECT count(*) FROM product_type WHERE kind = 'RULE'")).isEqualTo(16);
@@ -71,17 +71,18 @@ class AdminImportControllerTest {
 
 	@Test
 	void storedItemKeepsItsRuleGroupWhenTheNextFileSaysOtherwise() throws Exception {
-		upload(csv().ruleItem(1, "100", "E001", "Serum", "R001", "Sachet").item(2, "120", "E002", "Toner").file());
+		upload(csv().ruleItem(1, "100", "E001", "Serum", "R001", "Sachet").item(3, "110", "E001", "Serum")
+				.item(2, "120", "E002", "Toner").file());
 
-		upload(csv().ruleItem(1, "90", "E001", "Serum", "R007", "Other").ruleItem(2, "120", "E002", "Toner", "R007",
-				"Other").file())
+		upload(csv().ruleItem(1, "90", "E001", "Serum", "R007", "Other").item(3, "110", "E001", "Serum")
+				.ruleItem(2, "120", "E002", "Toner", "R007", "Other").file())
 				.andExpect(status().isOk());
 
 		assertThat(jdbc.sql("""
 				SELECT mp.item_id || ':' || coalesce(r.type_name, '-') || ':' || mp.status
 				FROM marketplace_product mp LEFT JOIN product_type r ON r.product_type_id = mp.rule_type_id
 				WHERE mp.active_flag = 'Y' ORDER BY mp.item_id""").query(String.class).list())
-				.containsExactly("1:Sachet:OK", "2:-:OK");
+				.containsExactly("1:Sachet:OK", "2:-:OK", "3:-:OK");
 	}
 
 	@Test

@@ -155,6 +155,7 @@ public class ImportService {
 				activeById.get(s.productId()).markSeen(s.status(), batchId, now);
 			}
 			plan.notInLatest().forEach(id -> activeById.get(id).markNotInLatest());
+			types.findAllById(plan.reopenedRuleTypeIds()).forEach(ProductType::reopenMergeReview);
 		}
 
 		private long create(TypeKind kind, ImportPlan.NewType t) {

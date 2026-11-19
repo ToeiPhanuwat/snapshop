@@ -91,7 +91,8 @@ public class ImportPlanner {
 
 		ImportPlan build() {
 			return new ImportPlan(List.copyOf(newTypes.values()), rules.newRuleTypes(), newVersions, seenAgain,
-					notInLatest, List.copyOf(feedItemIds), rules.autoPassed());
+					notInLatest, List.copyOf(feedItemIds), rules.autoPassed(),
+					rules.reopened());
 		}
 
 		private boolean isKnown(ImportRow row) {

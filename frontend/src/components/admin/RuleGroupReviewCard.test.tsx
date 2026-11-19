@@ -29,6 +29,11 @@ describe("RuleGroupReviewCard", () => {
     );
   });
 
+  test("a rule group with nothing waiting shows no waiting count", () => {
+    render(<RuleGroupReviewCard group={ruleGroup({ pendingCount: 0 })} />);
+    expect(screen.queryByText(/รอตรวจ \d+ รายการ/)).not.toBeInTheDocument();
+  });
+
   test("ticks every name group by default", () => {
     render(<RuleGroupReviewCard group={ruleGroup()} />);
     expect(checkbox("PT000011")).toBeChecked();

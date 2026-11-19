@@ -45,6 +45,10 @@ public class ProductType {
 	@Column(name = "merged_into_type_id")
 	private Long mergedIntoTypeId;
 
+	/** When the admin confirmed this rule group; null until then, and again after an import adds an item to it. */
+	@Column(name = "merge_reviewed_at")
+	private Instant mergeReviewedAt;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
@@ -96,6 +100,25 @@ public class ProductType {
 			throw new BusinessRuleException("กลุ่ม " + code + " รวมเข้ากลุ่ม R อื่นแล้ว");
 		}
 		this.mergedIntoTypeId = ruleGroup.id;
+	}
+
+	public Instant getMergeReviewedAt() {
+		return mergeReviewedAt;
+	}
+
+	/** The admin confirmed this rule group; confirming again keeps the first time. */
+	public void markMergeReviewed(Instant at) {
+		if (kind != TypeKind.RULE) {
+			throw new BusinessRuleException("ยืนยันได้เฉพาะกลุ่ม R");
+		}
+		if (mergeReviewedAt == null) {
+			mergeReviewedAt = at;
+		}
+	}
+
+	/** A new item joined this rule group, so the admin should look at it again. */
+	public void reopenMergeReview() {
+		mergeReviewedAt = null;
 	}
 
 	public Instant getCreatedAt() {

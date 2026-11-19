@@ -18,9 +18,9 @@ export function RuleGroupReviewCard({ group }: { group: RuleGroupReview }) {
     <form action={confirm} className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
       <input type="hidden" name="code" value={group.code} />
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="font-semibold">{group.name}</h2>
+        <h3 className="font-semibold">{group.name}</h3>
         <span className="text-xs text-zinc-500">{group.code}</span>
-        <Badge tone="warn">รอตรวจ {group.pendingCount} รายการ</Badge>
+        {group.pendingCount > 0 ? <Badge tone="warn">รอตรวจ {group.pendingCount} รายการ</Badge> : null}
       </div>
       <p className="text-xs text-zinc-500">ติ๊กกลุ่ม E ที่จะรวมเข้ากลุ่มนี้ (รวมทั้งกลุ่ม) แล้วกดยืนยัน</p>
       <div className="space-y-3">

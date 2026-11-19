@@ -13,7 +13,8 @@ import java.util.Objects;
  * @param seenAgain         current versions that stay, with their status for this round
  * @param notInLatest       current versions not in this file, to be hidden
  * @param feedItemIds       items to look up in the feed afterwards, ascending
- * @param autoPassedItemIds new items in a rule group that skip review because both rules agree, ascending
+ * @param autoPassedItemIds new items in a rule group that skip review because their name group shows on its own, ascending
+ * @param reopenedRuleTypeIds stored rule groups a new item joins, to show to the admin again, ascending
  */
 public record ImportPlan(
 		List<NewType> newTypes,
@@ -22,7 +23,8 @@ public record ImportPlan(
 		List<SeenAgain> seenAgain,
 		List<Long> notInLatest,
 		List<Long> feedItemIds,
-		List<Long> autoPassedItemIds) {
+		List<Long> autoPassedItemIds,
+		List<Long> reopenedRuleTypeIds) {
 
 	public ImportPlan {
 		newTypes = List.copyOf(newTypes);
@@ -32,6 +34,7 @@ public record ImportPlan(
 		notInLatest = List.copyOf(notInLatest);
 		feedItemIds = List.copyOf(feedItemIds);
 		autoPassedItemIds = List.copyOf(autoPassedItemIds);
+		reopenedRuleTypeIds = List.copyOf(reopenedRuleTypeIds);
 	}
 
 	public long priceChangeCount() {

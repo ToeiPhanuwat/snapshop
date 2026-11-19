@@ -8,7 +8,9 @@ import com.snapshop.dto.response.ProductResponse;
 import com.snapshop.dto.response.ProductTypeDetailResponse;
 import com.snapshop.dto.response.ProductTypeSummaryResponse;
 import com.snapshop.exception.NotFoundException;
+import com.snapshop.model.entity.ProductType;
 import com.snapshop.repository.ProductQueryRepository;
+import com.snapshop.repository.ProductTypeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,19 +20,28 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductQueryService {
 
 	private final ProductQueryRepository queries;
+	private final ProductTypeRepository types;
 
-	public ProductQueryService(ProductQueryRepository queries) {
+	public ProductQueryService(ProductQueryRepository queries, ProductTypeRepository types) {
 		this.queries = queries;
+		this.types = types;
 	}
 
 	public PageResponse<ProductTypeSummaryResponse> types(TypeSearchRequest request) {
 		return queries.findPublicTypes(request);
 	}
 
+	/** A name group merged into a rule group answers with the rule group, so its old link still leads somewhere. */
 	public ProductTypeDetailResponse type(String code) {
-		ProductTypeSummaryResponse summary = queries.findPublicType(code)
+		String shown = displayCode(code);
+		ProductTypeSummaryResponse summary = queries.findPublicType(shown)
 				.orElseThrow(() -> new NotFoundException("ไม่พบกลุ่มสินค้า " + code));
-		return ProductTypeDetailResponse.of(summary, queries.findPublicOffers(code));
+		return ProductTypeDetailResponse.of(summary, queries.findPublicOffers(shown));
+	}
+
+	private String displayCode(String code) {
+		return types.findByCode(code).map(ProductType::getMergedIntoTypeId).flatMap(types::findById)
+				.map(ProductType::getCode).orElse(code);
 	}
 
 	public PageResponse<ProductResponse> products(ProductSearchRequest request) {

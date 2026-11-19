@@ -14,6 +14,7 @@ import com.snapshop.repository.ImportLockRepository;
 import com.snapshop.repository.MarketplaceProductRepository;
 import com.snapshop.repository.ProductTypeRepository;
 import com.snapshop.service.importing.ProductName;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The admin compares a rule group (กลุ่ม R) with the name groups (กลุ่ม E) its items sit in, ticks the name groups to
- * merge into it, and confirms. Confirming merges the ticked name groups whole and passes every item of the rule group.
+ * merge into it, and confirms. Confirming merges the ticked name groups whole, passes every item of the rule group and
+ * marks it confirmed, so it leaves the list until an import adds an item to it.
  */
 @Service
 @Transactional
@@ -44,9 +46,15 @@ public class RuleGroupReviewService {
 		this.lock = lock;
 	}
 
+	/**
+	 * Rule groups with items waiting for review, and rule groups not yet confirmed whose items sit in two name groups
+	 * or more (nothing waits there, but the name groups can be merged).
+	 */
 	@Transactional(readOnly = true)
 	public List<RuleGroupReviewResponse> pending() {
-		return types.findAllById(products.findRuleTypeIdsWithStatus(ActiveFlag.Y, ProductStatus.REVIEW)).stream()
+		Set<Long> ruleTypeIds = new TreeSet<>(products.findRuleTypeIdsWithStatus(ActiveFlag.Y, ProductStatus.REVIEW));
+		ruleTypeIds.addAll(products.findUnconfirmedRuleTypeIdsSpanningNameGroups(ActiveFlag.Y));
+		return types.findAllById(ruleTypeIds).stream()
 				.sorted(Comparator.comparing(ProductType::getTypeName).thenComparing(ProductType::getCode))
 				.map(this::review)
 				.toList();
@@ -68,6 +76,7 @@ public class RuleGroupReviewService {
 			nameGroup.mergeInto(rule);
 		}
 		members.stream().filter(p -> p.getStatus() == ProductStatus.REVIEW).forEach(MarketplaceProduct::passReview);
+		rule.markMergeReviewed(Instant.now());
 	}
 
 	private RuleGroupReviewResponse review(ProductType rule) {
